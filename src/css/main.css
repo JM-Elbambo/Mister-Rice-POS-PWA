@@ -1,0 +1,25 @@
+.page-header {
+    background: linear-gradient(135deg, #4f46e5, #6366f1);
+}
+
+.theme-toggle {
+    background: #ffffff;
+    border: 1px solid #dee2e6;
+    color: #495057;
+}
+
+.theme-toggle:hover {
+    background: #f8f9fa;
+    border-color: #adb5bd;
+}
+
+[data-bs-theme="dark"] .theme-toggle {
+    background: #343a40;
+    border-color: #6c757d;
+    color: #ffffff;
+}
+
+[data-bs-theme="dark"] .theme-toggle:hover {
+    background: #495057;
+    border-color: #adb5bd;
+}
