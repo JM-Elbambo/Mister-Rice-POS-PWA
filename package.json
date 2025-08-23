@@ -1,6 +1,13 @@
 {
+  "devDependencies": {
+    "parcel": "^2.15.4"
+  },
   "dependencies": {
-    "@supabase/supabase-js": "^2.56.0",
     "bootstrap": "^5.3.7"
-  }
+  },
+  "scripts": {
+  "dev": "parcel ./src/pos.html",
+  "prebuild": "npx rimraf build",
+  "build": "parcel build --public-url ./ ./src/pos.html --experimental-scope-hoisting --out-dir build"
+}
 }
