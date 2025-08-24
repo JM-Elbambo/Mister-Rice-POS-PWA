@@ -1,13 +1,13 @@
 const navLinks = [
-  { path: './pos.html', label: 'Point of Sale', icon: 'fa-cash-register' },
-  { path: './inventory.html', label: 'Inventory', icon: 'fa-boxes' },
-  { path: './transactions.html', label: 'Transactions', icon: 'fa-receipt' },
+  { path: '/pos.html', label: 'Point of Sale', icon: 'fa-cash-register' },
+  { path: '/inventory.html', label: 'Inventory', icon: 'fa-boxes' },
+  { path: '/transactions.html', label: 'Transactions', icon: 'fa-receipt' },
 ];
 
 export function getNavbarHTML(activePath = '/pos.html') {
   const linksHTML = navLinks.map(link => `
     <li class="nav-item">
-      <a class="nav-link ${link.path === activePath ? 'active' : ''}" href="${link.path}">
+      <a class="nav-link${link.path === activePath ? ' active' : ''}" href="${link.path}">
         <i class="fas ${link.icon} me-1"></i>${link.label}
       </a>
     </li>
