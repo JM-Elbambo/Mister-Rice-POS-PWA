@@ -1,5 +1,5 @@
 import { Modal, Toast } from 'bootstrap';
-
+import PaginationComponent from './component_pagination.js';
 
 // Sample inventory data
 let inventory = [
@@ -17,41 +17,81 @@ let inventory = [
     { id: 12, name: "Long Grain Rice 2kg", category: "Regular", barcode: "1234567890134", price: 165.00, stock: 35, minStock: 15 },
     { id: 13, name: "Short Grain Rice 1kg", category: "Regular", barcode: "1234567890135", price: 125.00, stock: 0, minStock: 20 },
     { id: 14, name: "Arborio Rice 500g", category: "Premium", barcode: "1234567890136", price: 160.00, stock: 14, minStock: 6 },
-    { id: 15, name: "Calrose Rice 5kg", category: "Regular", barcode: "1234567890137", price: 285.00, stock: 7, minStock: 10 }
+    { id: 15, name: "Calrose Rice 5kg", category: "Regular", barcode: "1234567890137", price: 285.00, stock: 7, minStock: 10 },
+    // Adding more sample data to demonstrate pagination
+    { id: 16, name: "Sushi Rice 2kg", category: "Premium", barcode: "1234567890138", price: 340.00, stock: 19, minStock: 8 },
+    { id: 17, name: "Thai Fragrant Rice 1kg", category: "Premium", barcode: "1234567890139", price: 195.00, stock: 31, minStock: 12 },
+    { id: 18, name: "Glutinous Rice 1kg", category: "Regular", barcode: "1234567890140", price: 175.00, stock: 0, minStock: 15 },
+    { id: 19, name: "Carolina Rice 5kg", category: "Regular", barcode: "1234567890141", price: 290.00, stock: 26, minStock: 10 },
+    { id: 20, name: "Forbidden Black Rice 500g", category: "Organic", barcode: "1234567890142", price: 240.00, stock: 9, minStock: 5 },
+    { id: 21, name: "Spanish Bomba Rice 1kg", category: "Premium", barcode: "1234567890143", price: 420.00, stock: 13, minStock: 6 },
+    { id: 22, name: "Indian Basmati Extra Long 2kg", category: "Premium", barcode: "1234567890144", price: 380.00, stock: 17, minStock: 8 },
+    { id: 23, name: "Vietnamese Rice 10kg", category: "Regular", barcode: "1234567890145", price: 425.00, stock: 0, minStock: 12 },
+    { id: 24, name: "Himalayan Red Rice 1kg", category: "Organic", barcode: "1234567890146", price: 280.00, stock: 21, minStock: 10 },
+    { id: 25, name: "Purple Rice 500g", category: "Organic", barcode: "1234567890147", price: 190.00, stock: 14, minStock: 8 }
 ];
 
+// Current filtered data (starts as all data, gets modified by filters)
 let filteredInventory = [...inventory];
+
+// Initialize pagination component
+const inventoryPagination = new PaginationComponent({
+    container: document.querySelector('#inventoryPaginationContainer'),
+    totalItems: filteredInventory.length,
+    onPageChange: function(pageInfo) {
+        console.log('Inventory page changed:', pageInfo);
+        loadInventory(pageInfo);
+    }
+});
 
 // Initialize page
 function initializeInventory() {
     updateQuickStats();
-    displayInventory();
+    loadInventory(inventoryPagination.getCurrentPageInfo());
 }
 
 function attachEventListeners() {
     // Search and filters
-    document.getElementById('searchInventory').addEventListener('input', filterInventory);
-    document.getElementById('categoryFilter').addEventListener('change', filterInventory);
-    document.getElementById('stockFilter').addEventListener('change', filterInventory);
-    document.getElementById('sortBy').addEventListener('change', sortInventory);
+    const searchInput = document.getElementById('searchInventory');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const stockFilter = document.getElementById('stockFilter');
+    const sortBy = document.getElementById('sortBy');
+    
+    if (searchInput) searchInput.addEventListener('input', applyFiltersAndPagination);
+    if (categoryFilter) categoryFilter.addEventListener('change', applyFiltersAndPagination);
+    if (stockFilter) stockFilter.addEventListener('change', applyFiltersAndPagination);
+    if (sortBy) sortBy.addEventListener('change', sortInventory);
     
     // Static buttons
-    document.querySelector('[data-action="reset-filters"]').addEventListener('click', resetFilters);
-    document.querySelector('[data-action="add-product"]').addEventListener('click', () => {
-        new Modal(document.getElementById('addProductModal')).show();
-    });
+    const resetFiltersBtn = document.querySelector('[data-action="reset-filters"]');
+    const addProductBtn = document.querySelector('[data-action="add-product"]');
+    
+    if (resetFiltersBtn) resetFiltersBtn.addEventListener('click', resetFilters);
+    if (addProductBtn) {
+        addProductBtn.addEventListener('click', () => {
+            const addModal = document.getElementById('addProductModal');
+            if (addModal) new Modal(addModal).show();
+        });
+    }
     
     // Modal buttons
-    document.querySelector('[data-action="save-new-product"]').addEventListener('click', addNewProduct);
-    document.querySelector('[data-action="update-product"]').addEventListener('click', updateProduct);
-    document.querySelector('[data-action="process-stock-adjustment"]').addEventListener('click', processStockAdjustment);
+    const saveNewProductBtn = document.querySelector('[data-action="save-new-product"]');
+    const updateProductBtn = document.querySelector('[data-action="update-product"]');
+    const processStockBtn = document.querySelector('[data-action="process-stock-adjustment"]');
+    
+    if (saveNewProductBtn) saveNewProductBtn.addEventListener('click', addNewProduct);
+    if (updateProductBtn) updateProductBtn.addEventListener('click', updateProduct);
+    if (processStockBtn) processStockBtn.addEventListener('click', processStockAdjustment);
     
     // Adjustment type change
-    document.getElementById('adjustmentType').addEventListener('change', updateAdjustmentInput);
+    const adjustmentType = document.getElementById('adjustmentType');
+    if (adjustmentType) adjustmentType.addEventListener('change', updateAdjustmentInput);
     
     // Table actions (event delegation for dynamically generated buttons)
-    document.getElementById('inventoryTableBody').addEventListener('click', handleTableActions);
+    const tableBody = document.getElementById('inventoryTableBody');
+    if (tableBody) tableBody.addEventListener('click', handleTableActions);
 }
+
 // Handle table action buttons (edit, adjust stock, delete)
 function handleTableActions(e) {
     const button = e.target.closest('button');
@@ -73,10 +113,18 @@ function updateQuickStats() {
     const lowStock = inventory.filter(item => item.stock > 0 && item.stock <= item.minStock).length;
     const outOfStock = inventory.filter(item => item.stock === 0).length;
 
-    document.getElementById('totalProducts').textContent = totalProducts;
-    document.getElementById('inStockCount').textContent = inStock;
-    document.getElementById('lowStockCount').textContent = lowStock;
-    document.getElementById('outOfStockCount').textContent = outOfStock;
+    // Update DOM elements with null checks
+    const elements = {
+        totalProducts: document.getElementById('totalProducts'),
+        inStockCount: document.getElementById('inStockCount'),
+        lowStockCount: document.getElementById('lowStockCount'),
+        outOfStockCount: document.getElementById('outOfStockCount')
+    };
+
+    if (elements.totalProducts) elements.totalProducts.textContent = totalProducts;
+    if (elements.inStockCount) elements.inStockCount.textContent = inStock;
+    if (elements.lowStockCount) elements.lowStockCount.textContent = lowStock;
+    if (elements.outOfStockCount) elements.outOfStockCount.textContent = outOfStock;
 }
 
 function getStockStatus(item) {
@@ -85,92 +133,126 @@ function getStockStatus(item) {
     return { text: 'In Stock', class: 'success' };
 }
 
-// Display inventory in table
-function displayInventory() {
+// Display inventory page with pagination
+function loadInventory(pageInfo) {
     const tbody = document.getElementById('inventoryTableBody');
     
-    if (filteredInventory.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="8" class="text-center py-4 text-muted">
-                    <i class="fas fa-search fa-2x mb-2"></i>
-                    <p>No products found matching your criteria</p>
-                </td>
-            </tr>
-        `;
-        return;
-    }
+    // Show loading state
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="8" class="text-center py-4">
+                <i class="fas fa-spinner fa-spin me-2"></i>Loading products...
+            </td>
+        </tr>
+    `;
+    
+    // Simulate loading delay (remove in production)
+    setTimeout(() => {
+        if (filteredInventory.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="text-center py-4 text-muted">
+                        <i class="fas fa-search fa-2x mb-2 d-block"></i>
+                        <p class="mb-0">No products found matching your criteria</p>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
 
-    tbody.innerHTML = filteredInventory.map(item => {
-        const status = getStockStatus(item);
-        return `
-            <tr>
-                <td>
-                    <strong>${item.name}</strong>
-                </td>
-                <td>
-                    <span class="badge bg-secondary">${item.category}</span>
-                </td>
-                <td>
-                    <code>${item.barcode}</code>
-                </td>
-                <td>
-                    <strong>₱${item.price.toFixed(2)}</strong>
-                </td>
-                <td>
-                    <span class="fw-bold">${item.stock}</span>
-                </td>
-                <td>
-                    <span class="text-muted">${item.minStock}</span>
-                </td>
-                <td>
-                    <span class="badge bg-${status.class}">${status.text}</span>
-                </td>
-                <td>
-                    <div class="btn-group btn-group-sm" role="group">
-                        <button class="btn btn-outline-primary" data-action="edit" data-product-id="${item.id}" title="Edit Product">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-outline-warning" data-action="adjust-stock" data-product-id="${item.id}" title="Adjust Stock">
-                            <i class="fas fa-boxes"></i>
-                        </button>
-                        <button class="btn btn-outline-danger" data-action="delete" data-product-id="${item.id}" title="Delete Product">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `;
-    }).join('');
+        // Calculate which products to show
+        const startIndex = pageInfo.startItem;
+        const endIndex = Math.min(pageInfo.startItem + inventoryPagination.itemsPerPage, filteredInventory.length);
+        const pageProducts = filteredInventory.slice(startIndex, endIndex);
+
+        tbody.innerHTML = pageProducts.map(item => {
+            const status = getStockStatus(item);
+            return `
+                <tr>
+                    <td>
+                        <span class="fw-medium">${item.name}</span>
+                    </td>
+                    <td>
+                        <span class="badge bg-secondary">${item.category}</span>
+                    </td>
+                    <td>
+                        <code>${item.barcode}</code>
+                    </td>
+                    <td>
+                        ₱${item.price.toFixed(2)}
+                    </td>
+                    <td>
+                        <strong class="${item.stock === 0 ? 'text-danger' : item.stock <= item.minStock ? 'text-warning' : ''}">${item.stock}</strong>
+                    </td>
+                    <td>
+                        <span class="text-muted">${item.minStock}</span>
+                    </td>
+                    <td>
+                        <span class="badge bg-${status.class}">${status.text}</span>
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button class="btn btn-outline-primary" data-action="edit" data-product-id="${item.id}" title="Edit Product">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-outline-warning" data-action="adjust-stock" data-product-id="${item.id}" title="Adjust Stock">
+                                <i class="fas fa-boxes"></i>
+                            </button>
+                            <button class="btn btn-outline-danger" data-action="delete" data-product-id="${item.id}" title="Delete Product">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }, 200);
 }
 
-// Filter inventory based on search and filters
-function filterInventory() {
-    const searchTerm = document.getElementById('searchInventory').value.toLowerCase();
-    const categoryFilter = document.getElementById('categoryFilter').value;
-    const stockFilter = document.getElementById('stockFilter').value;
+// Apply filters and update pagination
+function applyFiltersAndPagination() {
+    const searchInput = document.getElementById('searchInventory');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const stockFilter = document.getElementById('stockFilter');
+    
+    const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+    const categoryValue = categoryFilter ? categoryFilter.value : '';
+    const stockValue = stockFilter ? stockFilter.value : '';
 
     filteredInventory = inventory.filter(item => {
         const matchesSearch = item.name.toLowerCase().includes(searchTerm) || 
                             item.barcode.includes(searchTerm);
-        const matchesCategory = !categoryFilter || item.category === categoryFilter;
+        const matchesCategory = !categoryValue || item.category === categoryValue;
         
         let matchesStock = true;
-        if (stockFilter === 'in-stock') matchesStock = item.stock > item.minStock;
-        else if (stockFilter === 'low-stock') matchesStock = item.stock > 0 && item.stock <= item.minStock;
-        else if (stockFilter === 'out-of-stock') matchesStock = item.stock === 0;
+        if (stockValue === 'in-stock') matchesStock = item.stock > item.minStock;
+        else if (stockValue === 'low-stock') matchesStock = item.stock > 0 && item.stock <= item.minStock;
+        else if (stockValue === 'out-of-stock') matchesStock = item.stock === 0;
 
         return matchesSearch && matchesCategory && matchesStock;
     });
 
-    displayInventory();
+    // Apply current sorting
+    applySortingToFiltered();
+
+    // Update pagination with new filtered data
+    inventoryPagination.update({ 
+        totalItems: filteredInventory.length, 
+        currentPage: 1 
+    });
+
+    // Display first page of filtered data
+    loadInventory(inventoryPagination.getCurrentPageInfo());
 }
 
-function sortInventory() {
-    const sortBy = document.getElementById('sortBy').value;
+// Apply current sorting to filtered inventory
+function applySortingToFiltered() {
+    const sortBy = document.getElementById('sortBy');
+    
+    const sortValue = sortBy.value;
     
     filteredInventory.sort((a, b) => {
-        switch (sortBy) {
+        switch (sortValue) {
             case 'name': return a.name.localeCompare(b.name);
             case 'price': return a.price - b.price;
             case 'stock': return b.stock - a.stock;
@@ -178,44 +260,78 @@ function sortInventory() {
             default: return 0;
         }
     });
+}
 
-    displayInventory();
+function sortInventory() {
+    applySortingToFiltered();
+    loadInventory(inventoryPagination.getCurrentPageInfo());
 }
 
 function resetFilters() {
-    document.getElementById('searchInventory').value = '';
-    document.getElementById('categoryFilter').value = '';
-    document.getElementById('stockFilter').value = '';
-    document.getElementById('sortBy').value = 'name';
+    const searchInput = document.getElementById('searchInventory');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const stockFilter = document.getElementById('stockFilter');
+    const sortBy = document.getElementById('sortBy');
+    
+    if (searchInput) searchInput.value = '';
+    if (categoryFilter) categoryFilter.value = '';
+    if (stockFilter) stockFilter.value = '';
+    if (sortBy) sortBy.value = 'name';
+    
     filteredInventory = [...inventory];
-    displayInventory();
+    
+    // Update pagination and reset to first page
+    inventoryPagination.update({ 
+        totalItems: filteredInventory.length, 
+        currentPage: 1 
+    });
+    
+    loadInventory(inventoryPagination.getCurrentPageInfo());
 }
 
 function addNewProduct() {
     const form = document.getElementById('addProductForm');
-    if (!form.checkValidity()) {
-        form.reportValidity();
+    if (!form || !form.checkValidity()) {
+        if (form) form.reportValidity();
+        return;
+    }
+
+    const elements = {
+        name: document.getElementById('newProductName'),
+        category: document.getElementById('newProductCategory'),
+        barcode: document.getElementById('newProductBarcode'),
+        price: document.getElementById('newProductPrice'),
+        stock: document.getElementById('newProductStock'),
+        minStock: document.getElementById('newProductMinStock')
+    };
+
+    // Check if all elements exist
+    const missingElements = Object.keys(elements).filter(key => !elements[key]);
+    if (missingElements.length > 0) {
+        console.error('Missing form elements:', missingElements);
         return;
     }
 
     const newProduct = {
         id: Math.max(...inventory.map(p => p.id)) + 1,
-        name: document.getElementById('newProductName').value,
-        category: document.getElementById('newProductCategory').value,
-        barcode: document.getElementById('newProductBarcode').value,
-        price: parseFloat(document.getElementById('newProductPrice').value),
-        stock: parseInt(document.getElementById('newProductStock').value),
-        minStock: parseInt(document.getElementById('newProductMinStock').value)
+        name: elements.name.value,
+        category: elements.category.value,
+        barcode: elements.barcode.value,
+        price: parseFloat(elements.price.value),
+        stock: parseInt(elements.stock.value),
+        minStock: parseInt(elements.minStock.value)
     };
 
     inventory.push(newProduct);
-    filteredInventory = [...inventory];
+    
+    // Update filtered inventory and pagination
+    applyFiltersAndPagination();
     updateQuickStats();
-    displayInventory();
 
     // Reset form and close modal
     form.reset();
-    Modal.getInstance(document.getElementById('addProductModal')).hide();
+    const modal = Modal.getInstance(document.getElementById('addProductModal'));
+    if (modal) modal.hide();
     
     showToast('Product added successfully!', 'success');
 }
@@ -224,33 +340,71 @@ function editProduct(productId) {
     const product = inventory.find(p => p.id === productId);
     if (!product) return;
 
-    document.getElementById('editProductId').value = product.id;
-    document.getElementById('editProductName').value = product.name;
-    document.getElementById('editProductCategory').value = product.category;
-    document.getElementById('editProductBarcode').value = product.barcode;
-    document.getElementById('editProductPrice').value = product.price;
-    document.getElementById('editProductMinStock').value = product.minStock;
+    const elements = {
+        id: document.getElementById('editProductId'),
+        name: document.getElementById('editProductName'),
+        category: document.getElementById('editProductCategory'),
+        barcode: document.getElementById('editProductBarcode'),
+        price: document.getElementById('editProductPrice'),
+        minStock: document.getElementById('editProductMinStock')
+    };
 
-    new Modal(document.getElementById('editProductModal')).show();
+    // Check if all elements exist
+    const missingElements = Object.keys(elements).filter(key => !elements[key]);
+    if (missingElements.length > 0) {
+        console.error('Missing edit form elements:', missingElements);
+        return;
+    }
+
+    elements.id.value = product.id;
+    elements.name.value = product.name;
+    elements.category.value = product.category;
+    elements.barcode.value = product.barcode;
+    elements.price.value = product.price;
+    elements.minStock.value = product.minStock;
+
+    const editModal = document.getElementById('editProductModal');
+    if (editModal) new Modal(editModal).show();
 }
 
 function updateProduct() {
-    const productId = parseInt(document.getElementById('editProductId').value);
+    const productIdElement = document.getElementById('editProductId');
+    if (!productIdElement) return;
+    
+    const productId = parseInt(productIdElement.value);
     const product = inventory.find(p => p.id === productId);
     
     if (!product) return;
 
-    product.name = document.getElementById('editProductName').value;
-    product.category = document.getElementById('editProductCategory').value;
-    product.barcode = document.getElementById('editProductBarcode').value;
-    product.price = parseFloat(document.getElementById('editProductPrice').value);
-    product.minStock = parseInt(document.getElementById('editProductMinStock').value);
+    const elements = {
+        name: document.getElementById('editProductName'),
+        category: document.getElementById('editProductCategory'),
+        barcode: document.getElementById('editProductBarcode'),
+        price: document.getElementById('editProductPrice'),
+        minStock: document.getElementById('editProductMinStock')
+    };
 
-    filteredInventory = [...inventory];
+    // Check if all elements exist
+    const missingElements = Object.keys(elements).filter(key => !elements[key]);
+    if (missingElements.length > 0) {
+        console.error('Missing edit form elements:', missingElements);
+        return;
+    }
+
+    product.name = elements.name.value;
+    product.category = elements.category.value;
+    product.barcode = elements.barcode.value;
+    product.price = parseFloat(elements.price.value);
+    product.minStock = parseInt(elements.minStock.value);
+
+    // Update filtered inventory and display
+    applyFiltersAndPagination();
     updateQuickStats();
-    displayInventory();
 
-    Modal.getInstance(document.getElementById('editProductModal')).hide();
+    const editModal = document.getElementById('editProductModal');
+    const modal = Modal.getInstance(editModal);
+    if (modal) modal.hide();
+    
     showToast('Product updated successfully!', 'success');
 }
 
@@ -259,23 +413,37 @@ function openStockAdjustment(productId) {
     const product = inventory.find(p => p.id === productId);
     if (!product) return;
 
-    document.getElementById('adjustmentProductId').value = product.id;
-    document.getElementById('adjustmentProductName').value = product.name;
-    document.getElementById('adjustmentType').value = '';
-    document.getElementById('adjustmentQuantity').value = '';
-    document.getElementById('adjustmentReason').value = '';
+    const elements = {
+        id: document.getElementById('adjustmentProductId'),
+        name: document.getElementById('adjustmentProductName'),
+        type: document.getElementById('adjustmentType'),
+        quantity: document.getElementById('adjustmentQuantity'),
+        reason: document.getElementById('adjustmentReason')
+    };
+
+    if (elements.id) elements.id.value = product.id;
+    if (elements.name) elements.name.value = product.name;
+    if (elements.type) elements.type.value = '';
+    if (elements.quantity) elements.quantity.value = '';
+    if (elements.reason) elements.reason.value = '';
+    
     updateCurrentStockInfo();
 
-    new Modal(document.getElementById('stockAdjustmentModal')).show();
+    const stockModal = document.getElementById('stockAdjustmentModal');
+    if (stockModal) new Modal(stockModal).show();
 }
 
 // Update adjustment input label based on type
 function updateAdjustmentInput() {
-    const adjustmentType = document.getElementById('adjustmentType').value;
+    const adjustmentType = document.getElementById('adjustmentType');
     const label = document.getElementById('adjustmentQuantityLabel');
     const input = document.getElementById('adjustmentQuantity');
 
-    switch (adjustmentType) {
+    if (!adjustmentType || !label || !input) return;
+
+    const typeValue = adjustmentType.value;
+
+    switch (typeValue) {
         case 'add':
             label.textContent = 'Quantity to Add';
             input.placeholder = 'Enter quantity to add...';
@@ -296,11 +464,14 @@ function updateAdjustmentInput() {
     updateCurrentStockInfo();
 }
 
-// Update current stock info display on  edit page
+// Update current stock info display
 function updateCurrentStockInfo() {
-    const productId = document.getElementById('adjustmentProductId').value;
+    const productIdElement = document.getElementById('adjustmentProductId');
     const infoDiv = document.getElementById('currentStockInfo');
     
+    if (!productIdElement || !infoDiv) return;
+    
+    const productId = productIdElement.value;
     if (productId) {
         const product = inventory.find(p => p.id == productId);
         if (product) {
@@ -313,10 +484,22 @@ function updateCurrentStockInfo() {
 }
 
 function processStockAdjustment() {
-    const productId = parseInt(document.getElementById('adjustmentProductId').value);
-    const adjustmentType = document.getElementById('adjustmentType').value;
-    const quantity = parseInt(document.getElementById('adjustmentQuantity').value);
-    const reason = document.getElementById('adjustmentReason').value;
+    const elements = {
+        id: document.getElementById('adjustmentProductId'),
+        type: document.getElementById('adjustmentType'),
+        quantity: document.getElementById('adjustmentQuantity'),
+        reason: document.getElementById('adjustmentReason')
+    };
+
+    if (!elements.id || !elements.type || !elements.quantity) {
+        alert('Required form elements not found');
+        return;
+    }
+
+    const productId = parseInt(elements.id.value);
+    const adjustmentType = elements.type.value;
+    const quantity = parseInt(elements.quantity.value);
+    const reason = elements.reason ? elements.reason.value : '';
 
     if (!productId || !adjustmentType || isNaN(quantity) || quantity < 0) {
         alert('Please fill in all required fields with valid values');
@@ -343,13 +526,17 @@ function processStockAdjustment() {
     // Log adjustment (in real app, this would go to database)
     console.log(`Stock adjustment: ${product.name} - ${oldStock} → ${product.stock} (${adjustmentType}: ${quantity}) - Reason: ${reason}`);
 
-    filteredInventory = [...inventory];
+    // Update display and stats
+    applyFiltersAndPagination();
     updateQuickStats();
-    displayInventory();
 
     // Reset form and close modal
-    document.getElementById('stockAdjustmentForm').reset();
-    Modal.getInstance(document.getElementById('stockAdjustmentModal')).hide();
+    const form = document.getElementById('stockAdjustmentForm');
+    if (form) form.reset();
+    
+    const stockModal = document.getElementById('stockAdjustmentModal');
+    const modal = Modal.getInstance(stockModal);
+    if (modal) modal.hide();
     
     showToast(`Stock updated for ${product.name}`, 'success');
 }
@@ -357,9 +544,11 @@ function processStockAdjustment() {
 function deleteProduct(productId) {
     if (confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
         inventory = inventory.filter(p => p.id !== productId);
-        filteredInventory = [...inventory];
+        
+        // Update filtered inventory and pagination
+        applyFiltersAndPagination();
         updateQuickStats();
-        displayInventory();
+        
         showToast('Product deleted successfully!', 'info');
     }
 }
@@ -403,8 +592,33 @@ function showToast(message, type) {
     });
 }
 
+// Utility functions for external access
+function refreshInventory() {
+    applyFiltersAndPagination();
+    updateQuickStats();
+}
 
+function goToFirstPage() {
+    inventoryPagination.firstPage();
+}
+
+function updateInventoryCount(newTotal) {
+    inventoryPagination.update({ totalItems: newTotal });
+}
+
+// Initialize everything when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('Initializing inventory management...');
     initializeInventory();
     attachEventListeners();
 });
+
+// Export for potential external use
+export { 
+    refreshInventory, 
+    goToFirstPage, 
+    updateInventoryCount, 
+    inventoryPagination,
+    inventory,
+    filteredInventory 
+};

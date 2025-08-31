@@ -102,7 +102,7 @@
         </div>
 
         <!-- Transactions Table -->
-        <div class="row">
+        <div class="row mb-4">
             <div class="col-12">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
@@ -113,30 +113,173 @@
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table table-hover mb-0" id="transactionsTable">
+                            <table class="table table-hover mb-0">
                                 <thead class="table-dark">
                                     <tr>
                                         <th>Transaction ID</th>
                                         <th>Date & Time</th>
                                         <th>Items Summary</th>
-                                        <th>Total Items</th>
                                         <th>Amount</th>
                                         <th>Status</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="transactionsTableBody">
-                                    <!-- Table rows will be rendered by JS -->
+                                    <tr>
+                                        <td>
+                                            <span class="fw-medium">#TXN-2024-001</span>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <div>Aug 25, 2025</div>
+                                                <small class="text-muted">2:34 PM</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <div>Jasmine Rice (5kg) <span class="text-muted">x2</span></div>
+                                                <div>Brown Rice (10kg) <span class="text-muted">x1</span></div>
+                                                <small class="text-muted">+ 1 more item</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">4 items</span>
+                                        </td>
+                                        <td class="fw-bold text-success">₱2,150.00</td>
+                                        <td>
+                                            <span class="badge bg-success">Completed</span>
+                                        </td>
+                                        <td>
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                                                    <i class="fas fa-ellipsis-v"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="dropdown-item" id="viewDetails-TXN-2024-001"><i class="fas fa-eye me-2"></i>View Details</a></li>
+                                                    <li><a class="dropdown-item" id="printReceipt-TXN-2024-001"><i class="fas fa-print me-2"></i>Print Receipt</a></li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li><a class="dropdown-item text-danger" id="refund-TXN-2024-001"><i class="fas fa-undo me-2"></i>Refund</a></li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <span class="fw-medium">#TXN-2024-002</span>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <div>Aug 25, 2025</div>
+                                                <small class="text-muted">1:45 PM</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <div>White Rice (25kg) <span class="text-muted">x1</span></div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">1 item</span>
+                                        </td>
+                                        <td class="fw-bold text-success">₱1,200.00</td>
+                                        <td>
+                                            <span class="badge bg-success">Completed</span>
+                                        </td>
+                                        <td>
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                                                    <i class="fas fa-ellipsis-v"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="dropdown-item" id="viewDetails-TXN-2024-002"><i class="fas fa-eye me-2"></i>View Details</a></li>
+                                                    <li><a class="dropdown-item" id="printReceipt-TXN-2024-002"><i class="fas fa-print me-2"></i>Print Receipt</a></li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li><a class="dropdown-item text-danger" id="refund-TXN-2024-002"><i class="fas fa-undo me-2"></i>Refund</a></li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <span class="fw-medium">#TXN-2024-003</span>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <div>Aug 25, 2025</div>
+                                                <small class="text-muted">12:15 PM</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <div>Basmati Rice (5kg) <span class="text-muted">x2</span></div>
+                                                <div>Jasmine Rice (10kg) <span class="text-muted">x1</span></div>
+                                                <div>Brown Rice (5kg) <span class="text-muted">x3</span></div>
+                                                <small class="text-muted">+ 2 more items</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">8 items</span>
+                                        </td>
+                                        <td class="fw-bold text-success">₱4,750.00</td>
+                                        <td>
+                                            <span class="badge bg-success">Completed</span>
+                                        </td>
+                                        <td>
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                                                    <i class="fas fa-ellipsis-v"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="dropdown-item" id="viewDetails-TXN-2024-003"><i class="fas fa-eye me-2"></i>View Details</a></li>
+                                                    <li><a class="dropdown-item" id="printReceipt-TXN-2024-003"><i class="fas fa-print me-2"></i>Print Receipt</a></li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li><a class="dropdown-item text-danger" id="refund-TXN-2024-003"><i class="fas fa-undo me-2"></i>Refund</a></li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <span class="fw-medium">#TXN-2024-004</span>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <div>Aug 24, 2025</div>
+                                                <small class="text-muted">6:20 PM</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <div>Premium Rice (20kg) <span class="text-muted">x1</span></div>
+                                                <div>Organic Rice (5kg) <span class="text-muted">x2</span></div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">3 items</span>
+                                        </td>
+                                        <td class="fw-bold text-danger">₱1,850.00</td>
+                                        <td>
+                                            <span class="badge bg-danger">Refunded</span>
+                                        </td>
+                                        <td>
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                                                    <i class="fas fa-ellipsis-v"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="dropdown-item" id="viewDetails-TXN-2024-004"><i class="fas fa-eye me-2"></i>View Details</a></li>
+                                                    <li><a class="dropdown-item" id="viewRefund-TXN-2024-004"><i class="fas fa-file-alt me-2"></i>View Refund</a></li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
-                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center p-3">
-                            <div id="tableInfo" class="text-muted small mb-2 mb-md-0"></div>
-                            <nav>
-                                <ul class="pagination mb-0" id="pagination"></ul>
-                            </nav>
-                        </div>
                     </div>
+                
+                    <!-- Pagination -->
+                    <div id="transactionsPaginationContainer"></div>
                 </div>
             </div>
         </div>
