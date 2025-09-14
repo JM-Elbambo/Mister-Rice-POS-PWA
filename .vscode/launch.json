@@ -4,15 +4,10 @@
     {
       "type": "msedge",
       "request": "launch",
-      "name": "Launch Edge with Parcel",
-      "url": "http://localhost:1234",
+      "name": "Launch Edge against localhost",
+      "url": "http://localhost:3000",
       "webRoot": "${workspaceFolder}/src",
-      "sourceMaps": true,
-      "sourceMapPathOverrides": {
-        "/__parcel_source_root/*": "${webRoot}/*"
-      },
-      "preLaunchTask": "npm: dev",
-      "trace": true
+      "preLaunchTask": "start-webpack-dev-server"
     }
   ]
 }
