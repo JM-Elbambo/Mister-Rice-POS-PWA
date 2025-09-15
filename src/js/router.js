@@ -53,10 +53,7 @@ function router() {
     return;
   }
 
-  // Render navbar
-  const hideLinks = path === "/signin";
-  app.appendChild(Navbar(path, hideLinks));
-
-  // Render page content
+  // Render page
+  app.appendChild(Navbar(path, user));
   app.appendChild(page());
 }
