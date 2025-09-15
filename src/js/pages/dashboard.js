@@ -1,12 +1,15 @@
-// import Navbar from "../components/Navbar.js";
-
 export default function DashboardPage() {
   const div = document.createElement("div");
+
+  // fills remaining space inside #app
+  div.className =
+    "d-flex flex-column justify-content-center align-items-center flex-grow-1";
+
   div.innerHTML = `
-    <h1>Dashboard</h1>
-    <p>Welcome to Mister Rice POS Dashboard</p>
+    <div class="text-center">
+      <p class="lead">🚧 This page is under construction. Please check back soon! 🚧</p>
+    </div>
   `;
 
-  //   div.prepend(Navbar()); // add navbar at the top
   return div;
 }
