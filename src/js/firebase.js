@@ -3,13 +3,13 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyAncK6PWOIx3iMbtnFEgux1cMYfezPpHWo",
-    authDomain: "mister-rice.firebaseapp.com",
-    projectId: "mister-rice",
-    storageBucket: "mister-rice.firebasestorage.app",
-    messagingSenderId: "673926765502",
-    appId: "1:673926765502:web:93892992a399c55e3bf7ef",
-    measurementId: "G-ZXXCT85CRP"
+  apiKey: "AIzaSyAncK6PWOIx3iMbtnFEgux1cMYfezPpHWo",
+  authDomain: "mister-rice.firebaseapp.com",
+  projectId: "mister-rice",
+  storageBucket: "mister-rice.firebasestorage.app",
+  messagingSenderId: "673926765502",
+  appId: "1:673926765502:web:93892992a399c55e3bf7ef",
+  measurementId: "G-ZXXCT85CRP",
 };
 
 const app = initializeApp(firebaseConfig);

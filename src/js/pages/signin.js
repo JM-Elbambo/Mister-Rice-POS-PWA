@@ -1,7 +1,10 @@
-export default function SigninPage() {
-	const wrapper = document.createElement("div");
+import { auth } from "../firebase.js";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 
-	wrapper.innerHTML = `
+export default function SigninPage() {
+  const wrapper = document.createElement("div");
+
+  wrapper.innerHTML = `
     <div class="d-flex align-items-center position-relative bg-body-secondary" style="min-height: calc(100vh - 48px);">
       <!-- Background decoration -->
       <div class="position-absolute w-100 h-100 overflow-hidden">
@@ -58,38 +61,35 @@ export default function SigninPage() {
     </div>
   `;
 
-	// Google sign-in handler
-	const googleBtn = wrapper.querySelector("#googleSignIn");
-	if (!googleBtn) return wrapper;
+  // Google sign-in handler
+  const googleBtn = wrapper.querySelector("#googleSignIn");
+  if (!googleBtn) return wrapper;
 
-	const originalContent = googleBtn.innerHTML;
+  const originalContent = googleBtn.innerHTML;
 
-	googleBtn.addEventListener("click", async () => {
-		// Update button state
-		googleBtn.innerHTML = `
+  googleBtn.addEventListener("click", async () => {
+    // Update button state
+    googleBtn.style.width = `${googleBtn.offsetWidth}px`;
+    googleBtn.innerHTML = `
 			<div class="spinner-border spinner-border-sm me-2"></div>
-			<span>Signing in...</span>
+			<span class="fs-6 fw-bold">Signing in...</span>
 		`;
-		googleBtn.disabled = true;
+    googleBtn.disabled = true;
 
-		try {
-			const { auth } = await import("../firebase.js");
-			const { GoogleAuthProvider, signInWithPopup } = await import(
-				"firebase/auth"
-			);
-			const provider = new GoogleAuthProvider();
-			await signInWithPopup(auth, provider);
-		} catch (error) {
-			console.error("Sign-in error:", error);
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error("Sign-in error:", error);
 
-			// Show error message
-			const showError = () => {
-				if (window.bootstrap && bootstrap.Toast) {
-					const errorToast = document.createElement("div");
-					errorToast.className =
-						"toast align-items-center text-bg-danger border-0 position-fixed top-0 end-0 m-3";
-					errorToast.setAttribute("role", "alert");
-					errorToast.innerHTML = `
+      // Show error message
+      const showError = () => {
+        if (window.bootstrap && bootstrap.Toast) {
+          const errorToast = document.createElement("div");
+          errorToast.className =
+            "toast align-items-center text-bg-danger border-0 position-fixed top-0 end-0 m-3";
+          errorToast.setAttribute("role", "alert");
+          errorToast.innerHTML = `
 						<div class="d-flex">
 							<div class="toast-body">
 								<i class="bi bi-exclamation-triangle me-2"></i>
@@ -99,25 +99,25 @@ export default function SigninPage() {
 						</div>
 					`;
 
-					document.body.appendChild(errorToast);
-					const toast = new bootstrap.Toast(errorToast);
-					toast.show();
+          document.body.appendChild(errorToast);
+          const toast = new bootstrap.Toast(errorToast);
+          toast.show();
 
-					errorToast.addEventListener("hidden.bs.toast", () => {
-						errorToast.remove();
-					});
-				} else {
-					alert("Sign in failed. Please try again.");
-				}
-			};
+          errorToast.addEventListener("hidden.bs.toast", () => {
+            errorToast.remove();
+          });
+        } else {
+          alert("Sign in failed. Please try again.");
+        }
+      };
 
-			showError();
-		} finally {
-			// Restore button state
-			googleBtn.innerHTML = originalContent;
-			googleBtn.disabled = false;
-		}
-	});
+      showError();
+    } finally {
+      // Restore button state
+      googleBtn.innerHTML = originalContent;
+      googleBtn.disabled = false;
+    }
+  });
 
-	return wrapper;
+  return wrapper;
 }

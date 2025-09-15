@@ -11,45 +11,52 @@ import DashboardPage from "./pages/dashboard";
 import Navbar from "./components/navbar";
 
 const routes = {
-	"/signin": SigninPage,
-	"/dashboard": DashboardPage,
-	//   "/pos": POSPage,
-	//   "/transactions": TransactionsPage,
-	//   "/inventory": InventoryPage,
+  "/signin": SigninPage,
+  "/dashboard": DashboardPage,
+  //   "/pos": POSPage,
+  //   "/transactions": TransactionsPage,
+  //   "/inventory": InventoryPage,
 };
 
-function router() {
-	const path = location.hash.replace("#", "") || "/signin";
-	const page = routes[path] || DashboardPage;
-	const app = document.getElementById("app");
-	const user = auth.currentUser;
+export function initRouter() {
+  // Set up listeners
+  window.addEventListener("hashchange", router);
+  auth.onAuthStateChanged((user) => {
+    console.log("Auth state after reload:", user);
+    router();
+  });
 
-	app.innerHTML = "";
-
-	// Redirect away from signin if already logged in
-	if (path === "/signin" && user) {
-		location.hash = "/dashboard";
-		return;
-	}
-
-	// Redirect to signin if not logged in
-	if (path !== "/signin" && !user) {
-		location.hash = "/signin";
-		return;
-	}
-
-	const hideLinks = path === "/signin";
-
-	// Render navbar (always present, hide links on signin)
-	app.appendChild(Navbar(path, hideLinks));
-
-	// Render page content
-	app.appendChild(page());
+  router();
 }
 
-window.addEventListener("hashchange", router);
-window.addEventListener("load", router);
-
 export function navigate(path) {
-	location.hash = path;
+  location.hash = path;
+}
+
+function router() {
+  const path = location.hash.replace("#", "") || "/signin";
+  const page = routes[path] || DashboardPage;
+  const app = document.getElementById("app");
+  const user = auth.currentUser;
+
+  app.innerHTML = "";
+
+  // Redirect away from signin if already logged in
+  if (path === "/signin" && user) {
+    location.hash = "/dashboard";
+    return;
+  }
+
+  // Redirect to signin if not logged in
+  if (path !== "/signin" && !user) {
+    location.hash = "/signin";
+    return;
+  }
+
+  // Render navbar
+  const hideLinks = path === "/signin";
+  app.appendChild(Navbar(path, hideLinks));
+
+  // Render page content
+  app.appendChild(page());
 }
