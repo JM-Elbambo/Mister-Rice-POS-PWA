@@ -1,14 +1,14 @@
 import { auth } from "./firebase";
 
 // Pages
-import SigninPage from "./pages/signin";
-import DashboardPage from "./pages/dashboard";
+import SigninPage from "./pages/Signin";
+import DashboardPage from "./pages/Dashboard";
 // import POSPage from "./components/pos";
 // import TransactionsPage from "./components/transactions";
-// import InventoryPage from "./components/inventory";
+// import InventoryPage from "./pages/Inventory";
 
 // Components
-import Navbar from "./components/navbar";
+import Navbar from "./components/Navbar";
 
 const routes = {
   "/signin": SigninPage,
