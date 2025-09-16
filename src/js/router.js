@@ -22,7 +22,6 @@ export function initRouter() {
   // Set up listeners
   window.addEventListener("hashchange", router);
   auth.onAuthStateChanged((user) => {
-    console.log("Auth state after reload:", user);
     router();
   });
 
