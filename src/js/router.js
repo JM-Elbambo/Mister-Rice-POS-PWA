@@ -3,9 +3,9 @@ import { auth } from "./firebase";
 // Pages
 import SigninPage from "./pages/Signin";
 import DashboardPage from "./pages/Dashboard";
-// import POSPage from "./components/pos";
-// import TransactionsPage from "./components/transactions";
-// import InventoryPage from "./pages/Inventory";
+// import PointOfSalePage from "./pages/PointOfSale";
+import InventoryPage from "./pages/Inventory";
+// import TransactionsPage from "./pages/Transactions";
 
 // Components
 import Navbar from "./components/Navbar";
@@ -15,7 +15,7 @@ const routes = {
   "/dashboard": DashboardPage,
   //   "/pos": POSPage,
   //   "/transactions": TransactionsPage,
-  //   "/inventory": InventoryPage,
+  "/inventory": InventoryPage,
 };
 
 export function initRouter() {
