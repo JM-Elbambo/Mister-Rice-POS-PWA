@@ -1,11 +1,18 @@
 /**
- * Table Component
+ * Enhanced Table Component with conditional formatting
  * @param {Array} headers - array of column headers (strings)
  * @param {Array} rows - array of row data (each row = array of cells)
  * @param {Array} [actions] - optional array of action objects like:
  *   { label: string, onClick: function(row) }
+ * @param {Object} [formatters] - optional column formatters:
+ *   { columnIndex: function(value, rowData) => htmlString }
  */
-export default function Table(headers = [], rows = [], actions = null) {
+export default function Table(
+  headers = [],
+  rows = [],
+  actions = null,
+  formatters = {}
+) {
   const table = document.createElement("table");
   table.className = "table table-striped align-middle";
 
@@ -22,7 +29,7 @@ export default function Table(headers = [], rows = [], actions = null) {
     // Right-align and minimize width for "Actions" column
     if (actions && i === effectiveHeaders.length - 1) {
       th.className = "text-end text-nowrap";
-      th.style.width = "1%"; // Forces minimum width while allowing content to determine actual size
+      th.style.width = "1%";
     }
 
     headRow.appendChild(th);
@@ -34,9 +41,16 @@ export default function Table(headers = [], rows = [], actions = null) {
   rows.forEach((row, rowIndex) => {
     const tr = document.createElement("tr");
 
-    row.forEach((cell) => {
+    row.forEach((cell, cellIndex) => {
       const td = document.createElement("td");
-      td.textContent = cell;
+
+      // Apply formatter if available
+      if (formatters[cellIndex]) {
+        td.innerHTML = formatters[cellIndex](cell, row);
+      } else {
+        td.textContent = cell;
+      }
+
       tr.appendChild(td);
     });
 
@@ -70,7 +84,7 @@ function createActionsDropdown(actions, row, rowIndex) {
   toggleBtn.type = "button";
   toggleBtn.setAttribute("data-bs-toggle", "dropdown");
   toggleBtn.setAttribute("aria-expanded", "false");
-  toggleBtn.innerHTML = '<i class="bi-three-dots-vertical"></i>';
+  toggleBtn.innerHTML = '<i class="bi bi-three-dots-vertical"></i>';
 
   const menu = document.createElement("ul");
   menu.className = "dropdown-menu";
