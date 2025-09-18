@@ -5,6 +5,8 @@ import * as bootstrap from "bootstrap";
 
 import { initRouter } from "./router";
 
+window.bootstrap = bootstrap;
+
 document.addEventListener("DOMContentLoaded", () => {
   initRouter();
 });
