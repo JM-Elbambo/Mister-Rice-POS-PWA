@@ -89,7 +89,6 @@ export default function Navbar(activePath = "/pos", signedIn = true) {
     const updateTheme = (theme) => {
       // Set theme on document root for entire SPA
       document.documentElement.setAttribute("data-bs-theme", theme);
-      document.body.className = "bg-body-secondary";
 
       // Update icons
       if (theme === "dark") {
