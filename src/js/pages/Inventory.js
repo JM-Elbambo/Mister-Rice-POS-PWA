@@ -4,6 +4,7 @@ import Table from "../components/Table.js";
 import Pagination from "../components/Pagination.js";
 import TableFilter from "../components/TableFilter.js";
 import ViewItemModal from "../components/modals/item/ViewItemModal.js";
+import EditItemModal from "../components/modals/item/EditItemModal.js";
 import { showSuccess, showError } from "../components/ToastNotification.js";
 
 export default function InventoryPage() {
@@ -43,6 +44,11 @@ export default function InventoryPage() {
       label: "View",
       onClick: showViewItem,
       className: "btn-outline-primary btn-sm",
+    },
+    {
+      label: "Edit",
+      onClick: showEditItem,
+      className: "btn-outline-secondary btn-sm",
     },
   ];
 
@@ -359,10 +365,21 @@ export default function InventoryPage() {
     ViewItemModal.show(item, showEditItem, showDeleteModal, showManageStock);
   }
 
-    });
-
+  async function showEditItem(item) {
+    EditItemModal.show(
+      item,
+      dataStore.categories.data,
+      async (itemId, updatedData) => {
+        try {
+          await dataStore.inventory.updateProduct(itemId, updatedData);
+          showSuccess("Product updated successfully");
+        } catch (error) {
+          showError("Failed to update product");
+          throw error;
+        }
+      }
+    );
   }
-
 
   function getStatus(item) {
     if (item.totalStock > item.minStock) return "In Stock";
