@@ -1,44 +1,44 @@
 import { categoriesCollection } from "./collections/categories.js";
 import { itemsCollection } from "./collections/items.js";
+import { stocksCollection } from "./collections/stocks.js";
 
 class DataStore {
   constructor() {
     this.collections = {
       categories: categoriesCollection,
       items: itemsCollection,
+      stocks: stocksCollection,
     };
   }
 
-  // Convenient getters
   get categories() {
     return this.collections.categories;
   }
+
   get inventory() {
     return this.collections.items;
   }
 
-  // Initialize all collections
-  async init() {
-    console.log("Initializing data store...");
-    // Only fetch critical data on init
-    // Other data loads on-demand
+  get stocks() {
+    return this.collections.stocks;
   }
 
-  // Start real-time listeners for all collections
+  async init() {
+    console.log("Initializing data store...");
+  }
+
   startListening() {
     Object.values(this.collections).forEach((collection) => {
       collection.listen();
     });
   }
 
-  // Stop all listeners
   stopListening() {
     Object.values(this.collections).forEach((collection) => {
       collection.stopListening();
     });
   }
 
-  // Cleanup everything
   cleanup() {
     Object.values(this.collections).forEach((collection) => {
       collection.cleanup();
