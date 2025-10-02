@@ -3,6 +3,7 @@ import QuickStats from "../components/QuickStats.js";
 import Table from "../components/Table.js";
 import Pagination from "../components/Pagination.js";
 import TableFilter from "../components/TableFilter.js";
+import ViewItemModal from "../components/modals/item/ViewItemModal.js";
 import { showSuccess, showError } from "../components/ToastNotification.js";
 
 export default function InventoryPage() {
@@ -38,6 +39,11 @@ export default function InventoryPage() {
     "Status",
   ];
   const actions = [
+    {
+      label: "View",
+      onClick: showViewItem,
+      className: "btn-outline-primary btn-sm",
+    },
   ];
 
   async function init() {
@@ -102,8 +108,8 @@ export default function InventoryPage() {
     return items.map((item) => ({
       ...item,
       categoryName:
-        item.categoryId && categoryMap.has(item.categoryId)
-          ? categoryMap.get(item.categoryId)
+        item.category && categoryMap.has(item.category)
+          ? categoryMap.get(item.category)
           : "Uncategorized",
     }));
   }
