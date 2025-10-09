@@ -68,7 +68,7 @@ export default class EditItemModal extends BaseModal {
                     class="form-control" 
                     id="productPrice" 
                     value="${this.item.price || 0}" 
-                    step="0.01" 
+                    step="0.1" 
                     min="0" 
                     required
                   >
