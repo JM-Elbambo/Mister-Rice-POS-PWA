@@ -6,6 +6,7 @@ import TableFilter from "../components/TableFilter.js";
 import AddItemModal from "../components/modals/item/AddItemModal.js";
 import ViewItemModal from "../components/modals/item/ViewItemModal.js";
 import EditItemModal from "../components/modals/item/EditItemModal.js";
+import AdjustStockModal from "../components/modals/item/AdjustStockModal.js";
 import { showSuccess, showError } from "../components/ToastNotification.js";
 
 export default function InventoryPage() {
@@ -53,6 +54,11 @@ export default function InventoryPage() {
       label: "Edit",
       onClick: showEditItemModal,
       className: "btn-outline-secondary btn-sm",
+    },
+    {
+      label: "Stock",
+      onClick: showAdjustStockModal,
+      className: "btn-outline-success btn-sm",
     },
   ];
 
@@ -393,7 +399,7 @@ export default function InventoryPage() {
       item,
       showEditItemModal,
       showDeleteModal,
-      showManageStockModal
+      showAdjustStockModal
     );
   }
 
@@ -411,6 +417,36 @@ export default function InventoryPage() {
         }
       }
     );
+  }
+
+  async function showAdjustStockModal(item) {
+    AdjustStockModal.show(item, async (item, data) => {
+      try {
+        if (data.mode === "add") {
+          await dataStore.stocks.addStock(
+            item.id,
+            data.quantity,
+            data.cost,
+            data.purchaseDate
+          );
+          const newTotal = dataStore.stocks.getTotalRemaining(item.id);
+          await dataStore.inventory.syncTotalStock(item.id, newTotal);
+          showSuccess(`Added ${data.quantity} units to ${item.name}`);
+        } else {
+          await dataStore.stocks.reduceStock(
+            item.id,
+            data.quantity,
+            data.reason
+          );
+          const newTotal = dataStore.stocks.getTotalRemaining(item.id);
+          await dataStore.inventory.syncTotalStock(item.id, newTotal);
+          showSuccess(`Reduced ${data.quantity} units from ${item.name}`);
+        }
+      } catch (error) {
+        showError(error.message || "Failed to update totalStock");
+        throw error;
+      }
+    });
   }
 
   function getStatus(item) {
