@@ -1,11 +1,10 @@
 import BaseModal from "../BaseModal.js";
 
 export default class ViewItemModal extends BaseModal {
-  constructor(item, onEdit, onDelete, onManageStock) {
+  constructor(item, onEdit, onManageStock) {
     super({ size: "modal-dialog-centered modal-lg" });
     this.item = item;
     this.onEdit = onEdit;
-    this.onDelete = onDelete;
     this.onManageStock = onManageStock;
   }
 
@@ -115,9 +114,6 @@ export default class ViewItemModal extends BaseModal {
                       <button type="button" class="btn btn-outline-success" id="manageStockBtn">
                         <i class="bi bi-box-seam me-2"></i>Manage Stock
                       </button>
-                      <button type="button" class="btn btn-outline-danger" id="deleteBtn">
-                        <i class="bi bi-trash3 me-2"></i>Delete Product
-                      </button>
                     </div>
                   </div>
                 </div>
@@ -154,7 +150,6 @@ export default class ViewItemModal extends BaseModal {
   attachEventListeners() {
     const editBtn = this.modal.querySelector("#editBtn");
     const manageStockBtn = this.modal.querySelector("#manageStockBtn");
-    const deleteBtn = this.modal.querySelector("#deleteBtn");
 
     if (editBtn) {
       editBtn.addEventListener("click", () => {
@@ -168,13 +163,6 @@ export default class ViewItemModal extends BaseModal {
         this.hide();
         if (this.onManageStock)
           setTimeout(() => this.onManageStock(this.item), 150);
-      });
-    }
-
-    if (deleteBtn) {
-      deleteBtn.addEventListener("click", () => {
-        this.hide();
-        if (this.onDelete) setTimeout(() => this.onDelete(this.item), 150);
       });
     }
 
@@ -198,9 +186,7 @@ export default class ViewItemModal extends BaseModal {
     }
   }
 
-  static show(item, onEdit, onDelete, onManageStock) {
-    return new ViewItemModal(item, onEdit, onDelete, onManageStock)
-      .create()
-      .show();
+  static show(item, onEdit, onManageStock) {
+    return new ViewItemModal(item, onEdit, onManageStock).create().show();
   }
 }

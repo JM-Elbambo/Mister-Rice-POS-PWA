@@ -395,12 +395,7 @@ export default function InventoryPage() {
   }
 
   async function showViewItemModal(item) {
-    ViewItemModal.show(
-      item,
-      showEditItemModal,
-      showDeleteModal,
-      showAdjustStockModal
-    );
+    ViewItemModal.show(item, showEditItemModal, showAdjustStockModal);
   }
 
   async function showEditItemModal(item) {
