@@ -29,11 +29,12 @@ export default function InventoryPage() {
   main.appendChild(paginationContainer);
 
   let filteredData = [];
-  let currentFilterData = { search: "", filters: {}, sort: "" };
+  let appliedFilters = { search: "", filters: {}, sort: "" };
   let currentPage = 1;
   let unsubscribeItems = null;
   let unsubscribeCategories = null;
   let unsubscribeStocks = null;
+  let initialized = false;
 
   const itemsPerPage = 10;
   const headers = [
@@ -78,7 +79,7 @@ export default function InventoryPage() {
           if (loading) return;
           dataStore.categories.syncIdNameMap();
           updateData();
-        }
+        },
       );
 
       unsubscribeStocks = dataStore.stocks.subscribe((data, loading, error) => {
@@ -97,12 +98,15 @@ export default function InventoryPage() {
         dataStore.items.fetch(),
         dataStore.stocks.fetch(),
       ]);
+      initialized = true;
+      updateData();
     } catch (error) {
       showErrorState(error);
     }
   }
 
   function updateData() {
+    if (!initialized) return;
     if (dataStore.items.data.length >= 0) {
       const mappedData = dataStore.items.data.map((item) => ({
         ...item,
@@ -110,9 +114,9 @@ export default function InventoryPage() {
           dataStore.categories.idNameMap.get(item.category) ?? "Uncategorized",
         totalStock: dataStore.stocks.itemTotals.get(item.id) ?? 0,
       }));
-      filteredData = applyFilters(mappedData, currentFilterData);
-      renderContent();
+      filteredData = applyFilters(mappedData, appliedFilters);
     }
+    renderAll();
   }
 
   function showLoadingState() {
@@ -136,7 +140,7 @@ export default function InventoryPage() {
     `;
   }
 
-  function renderContent() {
+  function renderAll() {
     if (!main.contains(addButtonContainer)) {
       main.innerHTML = "";
       main.appendChild(statsContainer);
@@ -157,18 +161,18 @@ export default function InventoryPage() {
     const total = filteredData.length;
     const original = dataStore.items.data.length;
     const inStock = filteredData.filter(
-      (item) => item.status === "In Stock"
+      (item) => getStatus(item) === "In Stock",
     ).length;
     const lowStock = filteredData.filter(
-      (item) => item.status === "Low Stock"
+      (item) => getStatus(item) === "Low Stock",
     ).length;
     const outStock = filteredData.filter(
-      (item) => item.status === "Out of Stock"
+      (item) => getStatus(item) === "Out of Stock",
     ).length;
 
     const stats = [
       {
-        title: total === original ? "Total Products" : "Filtered",
+        title: total === original ? "All Products" : "Filtered Products",
         value: total,
         bgClass: "bg-primary",
         textClass: "text-white",
@@ -238,8 +242,8 @@ export default function InventoryPage() {
           { value: "stock_desc", label: "Stock (High-Low)" },
         ],
         onFilter: handleFilterChange,
-        initialValues: currentFilterData,
-      })
+        initialValues: appliedFilters,
+      }),
     );
   }
 
@@ -277,8 +281,8 @@ export default function InventoryPage() {
             if (item) action.onClick(item);
           },
         })),
-        formatters
-      )
+        formatters,
+      ),
     );
   }
 
@@ -315,7 +319,7 @@ export default function InventoryPage() {
         (item) =>
           item.name?.toLowerCase().includes(term) ||
           item.categoryName?.toLowerCase().includes(term) ||
-          item.barcode?.toLowerCase().includes(term)
+          item.barcode?.toLowerCase().includes(term),
       );
     }
 
@@ -323,6 +327,8 @@ export default function InventoryPage() {
       if (value) {
         if (key === "category") {
           result = result.filter((item) => item.categoryName === value);
+        } else if (key === "status") {
+          result = result.filter((item) => getStatus(item) === value);
         } else {
           result = result.filter((item) => item[key] === value);
         }
@@ -354,17 +360,10 @@ export default function InventoryPage() {
     return result;
   }
 
-  function handleFilterChange(filterData) {
-    currentFilterData = filterData;
-    const mappedData = mapCategories(
-      dataStore.items.data,
-      dataStore.categories.data
-    );
-    filteredData = applyFilters(mappedData, filterData);
+  function handleFilterChange(newFilters) {
+    appliedFilters = newFilters;
     currentPage = 1;
-    renderStats();
-    renderTable();
-    renderPagination();
+    updateData();
   }
 
   async function showAddItemModal() {
@@ -395,7 +394,7 @@ export default function InventoryPage() {
           toastManager.showError("Failed to update product");
           throw error;
         }
-      }
+      },
     );
   }
 
@@ -407,19 +406,19 @@ export default function InventoryPage() {
             item.id,
             data.quantity,
             data.cost,
-            data.purchaseDate
+            data.purchaseDate,
           );
           toastManager.showSuccess(
-            `Added ${data.quantity} units to ${item.name}`
+            `Added ${data.quantity} units to ${item.name}`,
           );
         } else {
           await dataStore.stocks.reduceStock(
             item.id,
-            data.quantity
+            data.quantity,
             // data.reason
           );
           toastManager.showSuccess(
-            `Reduced ${data.quantity} units from ${item.name}`
+            `Reduced ${data.quantity} units from ${item.name}`,
           );
         }
       } catch (error) {

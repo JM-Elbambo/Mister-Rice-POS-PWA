@@ -8,6 +8,8 @@
  *   { value: string, label: string }
  * @param {function} options.onFilter - Callback when filters change: (filterData) => {}
  * @param {boolean} [options.showReset=true] - Show reset button
+ * @param {Object} [options.initialValues] - Initial filter values:
+ *   { search: string, filters: {[filterId]: string}, sort: string }
  */
 export default function TableFilter({
   searchPlaceholder = "Search...",
@@ -15,6 +17,7 @@ export default function TableFilter({
   sortOptions = [],
   onFilter,
   showReset = true,
+  initialValues = { search: "", filters: {}, sort: "" },
 }) {
   const container = document.createElement("div");
   container.className = "card mb-4";
@@ -40,6 +43,7 @@ export default function TableFilter({
   searchInput.type = "text";
   searchInput.className = "form-control";
   searchInput.placeholder = searchPlaceholder;
+  searchInput.value = initialValues.search || "";
 
   searchGroup.append(searchIcon, searchInput);
   searchCol.appendChild(searchGroup);
@@ -69,6 +73,10 @@ export default function TableFilter({
       select.appendChild(optionEl);
     });
 
+    // Set initial value
+    const initialFilterValue = initialValues.filters?.[filter.id] ?? "";
+    select.value = initialFilterValue;
+
     filterElements[filter.id] = select;
     col.appendChild(select);
     row.appendChild(col);
@@ -89,6 +97,9 @@ export default function TableFilter({
       optionEl.textContent = option.label;
       sortSelect.appendChild(optionEl);
     });
+
+    // Set initial sort value
+    sortSelect.value = initialValues.sort || sortOptions[0]?.value || "";
 
     sortCol.appendChild(sortSelect);
     row.appendChild(sortCol);
@@ -143,7 +154,7 @@ export default function TableFilter({
   let searchTimeout;
   searchInput.addEventListener("input", () => {
     clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(handleChange, 300);
+    searchTimeout = setTimeout(handleChange, 500);
   });
 
   // Filter and sort change events

@@ -18,7 +18,7 @@ class CategoriesCollection extends BaseCollection {
   // Get category by name (case-insensitive)
   getByName(name) {
     return this.data.find(
-      (category) => category.name.toLowerCase() === name.toLowerCase()
+      (category) => category.name.toLowerCase() === name.toLowerCase(),
     );
   }
 
@@ -29,10 +29,13 @@ class CategoriesCollection extends BaseCollection {
 
   // Get categories for dropdown options
   getOptions() {
-    return this.data.map((category) => ({
-      value: category.name,
-      label: category.name,
-    }));
+    return [
+      { value: "Uncategorized", label: "Uncategorized" },
+      ...this.data.map((category) => ({
+        value: category.name,
+        label: category.name,
+      })),
+    ];
   }
 
   // Add new category
