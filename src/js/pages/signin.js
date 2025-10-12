@@ -32,7 +32,7 @@ export default function SigninPage() {
                     style="width: 64px; height: 64px;">
                   <i class="bi bi-shop text-primary fs-1"></i>
                 </div>
-                <h1 class="h4 fw-bold mb-1">Welcome Back</h1>
+                <h1 class="h4 fw-bold mb-2">Welcome Back</h1>
                 <p class="text-body-secondary mb-0 fs-6">Sign in to Rice Store POS</p>
               </div>
 
@@ -83,10 +83,12 @@ export default function SigninPage() {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
     } catch (error) {
-      if (error.code === "auth/popup-closed-by-user")
+      if (error.code === "auth/popup-closed-by-user") {
         toastManager.showWarning("Sign in popup closed. Please try again.");
-      else toastManager.showError("Sign in failed. Please try again.");
-    } finally {
+      } else {
+        toastManager.showError("Sign in failed. Please try again.");
+      }
+
       // Restore button state
       googleBtn.innerHTML = originalContent;
       googleBtn.disabled = false;

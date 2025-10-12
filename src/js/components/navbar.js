@@ -7,8 +7,8 @@ const navLinks = [
   { path: "/transactions", label: "Transactions", icon: "receipt" },
 ];
 
-export default function Navbar(activePath = "/pos", signedIn = true) {
-  const linksHTML = signedIn
+export default function Navbar(activePath = "/pos", hasAccess = true) {
+  const linksHTML = hasAccess
     ? navLinks
         .map(
           (link) => `
@@ -19,7 +19,7 @@ export default function Navbar(activePath = "/pos", signedIn = true) {
             <i class="bi bi-${link.icon} me-1"></i>${link.label}
           </a>
         </li>
-      `
+      `,
         )
         .join("")
     : "";
@@ -42,7 +42,7 @@ export default function Navbar(activePath = "/pos", signedIn = true) {
           </ul>
           <div class="d-flex gap-3">
             ${
-              signedIn
+              hasAccess
                 ? '<span class="badge bg-success d-inline-flex align-items-center">Online</span>'
                 : ""
             }
@@ -51,7 +51,7 @@ export default function Navbar(activePath = "/pos", signedIn = true) {
               <i class="bi bi-moon-fill d-none" id="darkIcon"></i>
             </button>
             ${
-              signedIn
+              hasAccess
                 ? '<button id="logoutBtn" class="btn btn-outline-danger btn-sm"><i class="bi bi-box-arrow-right me-1"></i>Logout</button>'
                 : ""
             }
@@ -61,7 +61,7 @@ export default function Navbar(activePath = "/pos", signedIn = true) {
     </nav>
 
     ${
-      signedIn
+      hasAccess
         ? `
             <header class="py-4 mb-4 bg-body border-bottom shadow-sm">
               <div class="container">
@@ -175,7 +175,6 @@ export default function Navbar(activePath = "/pos", signedIn = true) {
 
         await signOut(auth);
         modal.hide();
-        window.location.href = "#/login";
       } catch (error) {
         console.error("Logout error:", error);
         confirmBtn.innerHTML =

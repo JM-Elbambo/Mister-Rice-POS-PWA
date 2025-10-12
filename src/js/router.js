@@ -1,7 +1,9 @@
 import { auth } from "./firebase";
+import { dataStore } from "./store/index.js";
 
 // Pages
 import SigninPage from "./pages/Signin";
+import UnauthorizedPage from "./pages/UnauthorizedPage.js";
 import DashboardPage from "./pages/Dashboard";
 // import PointOfSalePage from "./pages/PointOfSale";
 import InventoryPage from "./pages/Inventory";
@@ -12,20 +14,29 @@ import Navbar from "./components/Navbar";
 
 const routes = {
   "/signin": SigninPage,
+  "/unauthorized": UnauthorizedPage,
   "/dashboard": DashboardPage,
   //   "/pos": POSPage,
   //   "/transactions": TransactionsPage,
   "/inventory": InventoryPage,
 };
 
+const routesWithoutAccess = new Set(["/signin", "/unauthorized"]);
+
 export function initRouter() {
   // Set up listeners
   window.addEventListener("hashchange", router);
   auth.onAuthStateChanged((user) => {
+    if (user) {
+      dataStore.checkAccess().then((hasAccess) => {
+        {
+          location.hash = hasAccess ? "" : "/unauthorized";
+          return;
+        }
+      });
+    }
     router();
   });
-
-  router();
 }
 
 export function navigate(path) {
@@ -33,26 +44,24 @@ export function navigate(path) {
 }
 
 function router() {
-  const path = location.hash.replace("#", "") || "/signin";
-  const page = routes[path] || DashboardPage;
-  const app = document.getElementById("app");
   const user = auth.currentUser;
-
-  app.innerHTML = "";
+  let path = location.hash.replace("#", "") || "/dashboard";
 
   // Redirect away from signin if already logged in
-  if (path === "/signin" && user) {
-    location.hash = "/dashboard";
-    return;
+  if (user && path === "/signin") {
+    path = "/dashboard";
   }
 
   // Redirect to signin if not logged in
-  if (path !== "/signin" && !user) {
-    location.hash = "/signin";
-    return;
+  if (!user && path !== "/signin") {
+    path = "/signin";
   }
 
+  const page = routes[path] || DashboardPage;
+  const app = document.getElementById("app");
+
   // Render page
-  app.appendChild(Navbar(path, user));
+  app.innerHTML = "";
+  app.appendChild(Navbar(path, !routesWithoutAccess.has(path)));
   app.appendChild(page());
 }
