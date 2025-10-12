@@ -7,7 +7,7 @@ import AddItemModal from "../components/modals/item/AddItemModal.js";
 import ViewItemModal from "../components/modals/item/ViewItemModal.js";
 import EditItemModal from "../components/modals/item/EditItemModal.js";
 import AdjustStockModal from "../components/modals/item/AdjustStockModal.js";
-import { showSuccess, showError } from "../components/ToastNotification.js";
+import toastManager from "../components/ToastManager.js";
 
 export default function InventoryPage() {
   const main = document.createElement("main");
@@ -371,9 +371,9 @@ export default function InventoryPage() {
     AddItemModal.show(dataStore.categories.data, async (newItem) => {
       try {
         await dataStore.items.addProduct(newItem);
-        showSuccess("Product added successfully");
+        toastManager.showSuccess("Product added successfully");
       } catch (error) {
-        showError("Failed to add product");
+        toastManager.showError("Failed to add product");
         throw error;
       }
     });
@@ -390,9 +390,9 @@ export default function InventoryPage() {
       async (itemId, updatedData) => {
         try {
           await dataStore.items.updateProduct(itemId, updatedData);
-          showSuccess("Product updated successfully");
+          toastManager.showSuccess("Product updated successfully");
         } catch (error) {
-          showError("Failed to update product");
+          toastManager.showError("Failed to update product");
           throw error;
         }
       }
@@ -409,17 +409,21 @@ export default function InventoryPage() {
             data.cost,
             data.purchaseDate
           );
-          showSuccess(`Added ${data.quantity} units to ${item.name}`);
+          toastManager.showSuccess(
+            `Added ${data.quantity} units to ${item.name}`
+          );
         } else {
           await dataStore.stocks.reduceStock(
             item.id,
             data.quantity
             // data.reason
           );
-          showSuccess(`Reduced ${data.quantity} units from ${item.name}`);
+          toastManager.showSuccess(
+            `Reduced ${data.quantity} units from ${item.name}`
+          );
         }
       } catch (error) {
-        showError(error.message || "Failed to update totalStock");
+        toastManager.showError(error.message || "Failed to update totalStock");
         throw error;
       }
     });

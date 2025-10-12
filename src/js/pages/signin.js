@@ -1,6 +1,8 @@
 import { auth } from "../firebase.js";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 
+import toastManager from "../components/ToastManager.js";
+
 export default function SigninPage() {
   const wrapper = document.createElement("div");
   wrapper.className =
@@ -81,38 +83,9 @@ export default function SigninPage() {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
     } catch (error) {
-      console.error("Sign-in error:", error);
-
-      // Show error message
-      const showError = () => {
-        if (window.bootstrap && bootstrap.Toast) {
-          const errorToast = document.createElement("div");
-          errorToast.className =
-            "toast align-items-center text-bg-danger border-0 position-fixed top-0 end-0 m-3";
-          errorToast.setAttribute("role", "alert");
-          errorToast.innerHTML = `
-						<div class="d-flex">
-							<div class="toast-body">
-								<i class="bi bi-exclamation-triangle me-2"></i>
-								Sign in failed. Please try again.
-							</div>
-							<button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-						</div>
-					`;
-
-          document.body.appendChild(errorToast);
-          const toast = new bootstrap.Toast(errorToast);
-          toast.show();
-
-          errorToast.addEventListener("hidden.bs.toast", () => {
-            errorToast.remove();
-          });
-        } else {
-          alert("Sign in failed. Please try again.");
-        }
-      };
-
-      showError();
+      if (error.code === "auth/popup-closed-by-user")
+        toastManager.showWarning("Sign in popup closed. Please try again.");
+      else toastManager.showError("Sign in failed. Please try again.");
     } finally {
       // Restore button state
       googleBtn.innerHTML = originalContent;

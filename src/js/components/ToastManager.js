@@ -18,6 +18,10 @@ class ToastManager {
     }
   }
 
+  /* Show a toast notification
+   * type: "success", "error", "warning", "info", "primary"
+   * options: { duration, title, action, persistent }
+   */
   show(message, type = "info", options = {}) {
     const {
       duration = 5000,
@@ -30,9 +34,7 @@ class ToastManager {
     const toastId = `toast-${this.toastCount}`;
 
     const toast = document.createElement("div");
-    toast.className = `toast align-items-center text-bg-${this.getBootstrapType(
-      type
-    )} border-0`;
+    toast.className = `toast align-items-center text-bg-${type} border-0`;
     toast.id = toastId;
     toast.setAttribute("role", "alert");
     toast.setAttribute("aria-live", "assertive");
@@ -117,14 +119,14 @@ class ToastManager {
     return bsToast;
   }
 
-  success(message, options = {}) {
+  showSuccess(message, options = {}) {
     return this.show(message, "success", {
       title: "Success",
       ...options,
     });
   }
 
-  error(message, options = {}) {
+  showError(message, options = {}) {
     return this.show(message, "danger", {
       title: "Error",
       duration: 8000, // Longer duration for errors
@@ -132,7 +134,7 @@ class ToastManager {
     });
   }
 
-  warning(message, options = {}) {
+  showWarning(message, options = {}) {
     return this.show(message, "warning", {
       title: "Warning",
       ...options,
@@ -144,18 +146,6 @@ class ToastManager {
       title: "Info",
       ...options,
     });
-  }
-
-  getBootstrapType(type) {
-    const typeMap = {
-      success: "success",
-      error: "danger",
-      danger: "danger",
-      warning: "warning",
-      info: "info",
-      primary: "primary",
-    };
-    return typeMap[type] || "info";
   }
 
   getIcon(type) {
@@ -184,18 +174,5 @@ class ToastManager {
 
 // Create singleton instance
 const toastManager = new ToastManager();
-
-// Export convenience functions
-export const showToast = (message, type, options) =>
-  toastManager.show(message, type, options);
-export const showSuccess = (message, options) =>
-  toastManager.success(message, options);
-export const showError = (message, options) =>
-  toastManager.error(message, options);
-export const showWarning = (message, options) =>
-  toastManager.warning(message, options);
-export const showInfo = (message, options) =>
-  toastManager.info(message, options);
-export const clearToasts = () => toastManager.clear();
 
 export default toastManager;
