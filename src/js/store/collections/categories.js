@@ -5,25 +5,6 @@ class CategoriesCollection extends BaseCollection {
     super("categories");
   }
 
-  // Process data after fetching - just clean names and sort
-  processData(rawData) {
-    return rawData
-      .map((item) => ({
-        ...item,
-        name: (item.name || "").trim(),
-      }))
-      .filter((item) => item.name) // Remove empty names
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }
-
-  // Override fetch to include processing
-  async fetch() {
-    const data = await super.fetch();
-    this.data = this.processData(this.data);
-    this.notify();
-    return this.data;
-  }
-
   // Get all category names as array
   getNames() {
     return this.data.map((category) => category.name);
