@@ -26,24 +26,6 @@ class DataStore {
   async init() {
     console.log("Initializing data store...");
   }
-
-  startListening() {
-    Object.values(this.collections).forEach((collection) => {
-      collection.listen();
-    });
-  }
-
-  stopListening() {
-    Object.values(this.collections).forEach((collection) => {
-      collection.stopListening();
-    });
-  }
-
-  cleanup() {
-    Object.values(this.collections).forEach((collection) => {
-      collection.cleanup();
-    });
-  }
 }
 
 export const dataStore = new DataStore();

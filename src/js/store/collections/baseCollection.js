@@ -12,6 +12,7 @@ import { db } from "../../firebase.js";
 export class BaseCollection {
   constructor(collectionName) {
     this.collectionName = collectionName;
+    this.query = null;
     this.data = [];
     this.loading = false;
     this.error = null;
@@ -41,11 +42,14 @@ export class BaseCollection {
     this.notify();
 
     try {
-      const snapshot = await getDocs(collection(db, this.collectionName));
+      const target = this.query ?? collection(db, this.collectionName);
+      const snapshot = await getDocs(target);
+
       this.data = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
+
       this.error = null;
     } catch (error) {
       console.error(`Error fetching ${this.collectionName}:`, error);
@@ -62,8 +66,10 @@ export class BaseCollection {
   listen() {
     if (this.unsubscribe) return; // Already listening
 
+    const target = this.query ?? collection(db, this.collectionName);
+
     this.unsubscribe = onSnapshot(
-      collection(db, this.collectionName),
+      target,
       (snapshot) => {
         this.data = snapshot.docs.map((doc) => ({
           id: doc.id,

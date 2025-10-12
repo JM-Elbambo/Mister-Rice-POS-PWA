@@ -74,12 +74,18 @@ export default function InventoryPage() {
 
       unsubscribeCategories = dataStore.categories.subscribe(
         (data, loading, error) => {
-          if (!loading && !error) updateData();
+          if (error) return showErrorState(error);
+          if (loading) return;
+          dataStore.categories.syncIdNameMap();
+          updateData();
         }
       );
 
       unsubscribeStocks = dataStore.stocks.subscribe((data, loading, error) => {
-        if (!loading && !error) syncTotalStocks();
+        if (error) return showErrorState(error);
+        if (loading) return;
+        dataStore.stocks.syncItemTotals();
+        updateData();
       });
 
       dataStore.items.listen();
@@ -96,36 +102,17 @@ export default function InventoryPage() {
     }
   }
 
-  async function syncTotalStocks() {
-    const items = dataStore.items.data;
-    for (const item of items) {
-      const totalStock = dataStore.stocks.getTotalRemaining(item.id);
-      if (totalStock !== item.totalStock) {
-        await dataStore.items.syncTotalStock(item.id, totalStock);
-      }
-    }
-  }
-
   function updateData() {
-    const itemsData = dataStore.items.data;
-    const categoriesData = dataStore.categories.data;
-
-    if (itemsData.length >= 0) {
-      const mappedData = mapCategories(itemsData, categoriesData);
+    if (dataStore.items.data.length >= 0) {
+      const mappedData = dataStore.items.data.map((item) => ({
+        ...item,
+        categoryName:
+          dataStore.categories.idNameMap.get(item.category) ?? "Uncategorized",
+        totalStock: dataStore.stocks.itemTotals.get(item.id) ?? 0,
+      }));
       filteredData = applyFilters(mappedData, currentFilterData);
       renderContent();
     }
-  }
-
-  function mapCategories(items, categories) {
-    const categoryMap = new Map(categories.map((cat) => [cat.id, cat.name]));
-    return items.map((item) => ({
-      ...item,
-      categoryName:
-        item.category && categoryMap.has(item.category)
-          ? categoryMap.get(item.category)
-          : "Uncategorized",
-    }));
   }
 
   function showLoadingState() {
@@ -422,8 +409,6 @@ export default function InventoryPage() {
             data.cost,
             data.purchaseDate
           );
-          const newTotal = dataStore.stocks.getTotalRemaining(item.id);
-          await dataStore.items.syncTotalStock(item.id, newTotal);
           showSuccess(`Added ${data.quantity} units to ${item.name}`);
         } else {
           await dataStore.stocks.reduceStock(
@@ -431,8 +416,6 @@ export default function InventoryPage() {
             data.quantity
             // data.reason
           );
-          const newTotal = dataStore.stocks.getTotalRemaining(item.id);
-          await dataStore.items.syncTotalStock(item.id, newTotal);
           showSuccess(`Reduced ${data.quantity} units from ${item.name}`);
         }
       } catch (error) {

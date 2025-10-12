@@ -3,6 +3,11 @@ import { BaseCollection } from "./baseCollection.js";
 class CategoriesCollection extends BaseCollection {
   constructor() {
     super("categories");
+    this.idNameMap = new Map();
+  }
+
+  syncIdNameMap() {
+    this.idNameMap = new Map(this.data.map((cat) => [cat.id, cat.name]));
   }
 
   // Get all category names as array

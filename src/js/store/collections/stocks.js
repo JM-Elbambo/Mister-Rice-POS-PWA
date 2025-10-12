@@ -6,27 +6,18 @@ import {
   getDocs,
   updateDoc,
   doc,
-  onSnapshot,
 } from "firebase/firestore";
 import { db } from "../../firebase.js";
 
 class StocksCollection extends BaseCollection {
   constructor() {
     super("stocks");
-  }
 
-  processData(rawData) {
-    return (
-      rawData
-        // .filter((stock) => (parseFloat(stock.remaining) || 0) > 0)
-        .map((stock) => ({
-          ...stock,
-          quantity: parseFloat(stock.quantity) || 0,
-          remaining: parseFloat(stock.remaining) || 0,
-          cost: parseFloat(stock.cost) || 0,
-          purchaseDate: stock.purchaseDate || new Date().toISOString(),
-        }))
+    this.query = query(
+      collection(db, this.collectionName),
+      where("remaining", ">", 0)
     );
+    this.itemTotals = new Map();
   }
 
   async fetch() {
@@ -42,9 +33,10 @@ class StocksCollection extends BaseCollection {
         where("remaining", ">", 0)
       );
       const snapshot = await getDocs(q);
-      this.data = this.processData(
-        snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
-      );
+      this.data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
       this.error = null;
     } catch (error) {
       console.error(`Error fetching ${this.collectionName}:`, error);
@@ -55,50 +47,6 @@ class StocksCollection extends BaseCollection {
     }
 
     return this.data;
-  }
-
-  listen() {
-    if (this.unsubscribe) return;
-
-    const q = query(
-      collection(db, this.collectionName),
-      where("remaining", ">", 0)
-    );
-
-    this.unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        this.data = this.processData(
-          snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
-        );
-        this.loading = false;
-        this.error = null;
-        this.notify();
-      },
-      (error) => {
-        console.error(`${this.collectionName} listener error:`, error);
-        this.error = error;
-        this.notify();
-      }
-    );
-  }
-
-  async getByItem(itemId) {
-    const q = query(
-      collection(db, this.collectionName),
-      where("itemId", "==", itemId),
-      where("remaining", ">", 0)
-    );
-    const snapshot = await getDocs(q);
-    return snapshot.docs
-      .map((doc) => ({ id: doc.id, ...doc.data() }))
-      .sort((a, b) => new Date(a.purchaseDate) - new Date(b.purchaseDate));
-  }
-
-  getAvailableByItem(itemId) {
-    return this.data
-      .filter((s) => s.itemId === itemId)
-      .sort((a, b) => new Date(a.purchaseDate) - new Date(b.purchaseDate));
   }
 
   async addStock(itemId, quantity, cost, purchaseDate = new Date()) {
@@ -149,10 +97,21 @@ class StocksCollection extends BaseCollection {
     return updates;
   }
 
-  getTotalRemaining(itemId) {
+  getAvailableByItem(itemId) {
     return this.data
       .filter((s) => s.itemId === itemId)
-      .reduce((sum, s) => sum + s.remaining, 0);
+      .sort((a, b) => new Date(a.purchaseDate) - new Date(b.purchaseDate));
+  }
+
+  syncItemTotals() {
+    this.itemTotals = new Map();
+
+    for (const stock of this.data) {
+      if (!stock.itemId) continue;
+
+      const current = this.itemTotals.get(stock.itemId) ?? 0;
+      this.itemTotals.set(stock.itemId, current + (stock.remaining ?? 0));
+    }
   }
 }
 
