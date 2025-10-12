@@ -428,8 +428,8 @@ export default function InventoryPage() {
         } else {
           await dataStore.stocks.reduceStock(
             item.id,
-            data.quantity,
-            data.reason
+            data.quantity
+            // data.reason
           );
           const newTotal = dataStore.stocks.getTotalRemaining(item.id);
           await dataStore.items.syncTotalStock(item.id, newTotal);

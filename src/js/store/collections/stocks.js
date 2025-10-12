@@ -114,7 +114,7 @@ class StocksCollection extends BaseCollection {
     return await this.add(stockData);
   }
 
-  async reduceStock(itemId, quantityToReduce, reason = "adjustment") {
+  async reduceStock(itemId, quantityToReduce) {
     const stocks = this.getAvailableByItem(itemId);
     let remaining = quantityToReduce;
     const updates = [];
