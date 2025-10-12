@@ -104,8 +104,8 @@ class StocksCollection extends BaseCollection {
   async addStock(itemId, quantity, cost, purchaseDate = new Date()) {
     const stockData = {
       itemId,
-      quantity: parseInt(quantity),
-      remaining: parseInt(quantity),
+      quantity: parseFloat(quantity),
+      remaining: parseFloat(quantity),
       cost: parseFloat(cost),
       purchaseDate: purchaseDate.toISOString(),
       createdAt: new Date().toISOString(),

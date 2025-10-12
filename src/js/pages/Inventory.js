@@ -31,7 +31,7 @@ export default function InventoryPage() {
   let filteredData = [];
   let currentFilterData = { search: "", filters: {}, sort: "" };
   let currentPage = 1;
-  let unsubscribeInventory = null;
+  let unsubscribeItems = null;
   let unsubscribeCategories = null;
   let unsubscribeStocks = null;
 
@@ -66,13 +66,11 @@ export default function InventoryPage() {
     try {
       showLoadingState();
 
-      unsubscribeInventory = dataStore.inventory.subscribe(
-        (data, loading, error) => {
-          if (error) return showErrorState(error);
-          if (loading) return;
-          updateData();
-        }
-      );
+      unsubscribeItems = dataStore.items.subscribe((data, loading, error) => {
+        if (error) return showErrorState(error);
+        if (loading) return;
+        updateData();
+      });
 
       unsubscribeCategories = dataStore.categories.subscribe(
         (data, loading, error) => {
@@ -84,13 +82,13 @@ export default function InventoryPage() {
         if (!loading && !error) syncTotalStocks();
       });
 
-      dataStore.inventory.listen();
+      dataStore.items.listen();
       dataStore.categories.listen();
       dataStore.stocks.listen();
 
       await Promise.all([
         dataStore.categories.fetch(),
-        dataStore.inventory.fetch(),
+        dataStore.items.fetch(),
         dataStore.stocks.fetch(),
       ]);
     } catch (error) {
@@ -99,21 +97,21 @@ export default function InventoryPage() {
   }
 
   async function syncTotalStocks() {
-    const items = dataStore.inventory.data;
+    const items = dataStore.items.data;
     for (const item of items) {
       const totalStock = dataStore.stocks.getTotalRemaining(item.id);
       if (totalStock !== item.totalStock) {
-        await dataStore.inventory.syncTotalStock(item.id, totalStock);
+        await dataStore.items.syncTotalStock(item.id, totalStock);
       }
     }
   }
 
   function updateData() {
-    const inventoryData = dataStore.inventory.data;
+    const itemsData = dataStore.items.data;
     const categoriesData = dataStore.categories.data;
 
-    if (inventoryData.length >= 0) {
-      const mappedData = mapCategories(inventoryData, categoriesData);
+    if (itemsData.length >= 0) {
+      const mappedData = mapCategories(itemsData, categoriesData);
       filteredData = applyFilters(mappedData, currentFilterData);
       renderContent();
     }
@@ -170,7 +168,7 @@ export default function InventoryPage() {
 
   function renderStats() {
     const total = filteredData.length;
-    const original = dataStore.inventory.data.length;
+    const original = dataStore.items.data.length;
     const inStock = filteredData.filter(
       (item) => item.status === "In Stock"
     ).length;
@@ -372,7 +370,7 @@ export default function InventoryPage() {
   function handleFilterChange(filterData) {
     currentFilterData = filterData;
     const mappedData = mapCategories(
-      dataStore.inventory.data,
+      dataStore.items.data,
       dataStore.categories.data
     );
     filteredData = applyFilters(mappedData, filterData);
@@ -385,7 +383,7 @@ export default function InventoryPage() {
   async function showAddItemModal() {
     AddItemModal.show(dataStore.categories.data, async (newItem) => {
       try {
-        await dataStore.inventory.addProduct(newItem);
+        await dataStore.items.addProduct(newItem);
         showSuccess("Product added successfully");
       } catch (error) {
         showError("Failed to add product");
@@ -404,7 +402,7 @@ export default function InventoryPage() {
       dataStore.categories.data,
       async (itemId, updatedData) => {
         try {
-          await dataStore.inventory.updateProduct(itemId, updatedData);
+          await dataStore.items.updateProduct(itemId, updatedData);
           showSuccess("Product updated successfully");
         } catch (error) {
           showError("Failed to update product");
@@ -417,7 +415,7 @@ export default function InventoryPage() {
   async function showAdjustStockModal(item) {
     AdjustStockModal.show(item, async (item, data) => {
       try {
-        if (data.mode === "add") {
+        if (data.isStockIn === true) {
           await dataStore.stocks.addStock(
             item.id,
             data.quantity,
@@ -425,7 +423,7 @@ export default function InventoryPage() {
             data.purchaseDate
           );
           const newTotal = dataStore.stocks.getTotalRemaining(item.id);
-          await dataStore.inventory.syncTotalStock(item.id, newTotal);
+          await dataStore.items.syncTotalStock(item.id, newTotal);
           showSuccess(`Added ${data.quantity} units to ${item.name}`);
         } else {
           await dataStore.stocks.reduceStock(
@@ -434,7 +432,7 @@ export default function InventoryPage() {
             data.reason
           );
           const newTotal = dataStore.stocks.getTotalRemaining(item.id);
-          await dataStore.inventory.syncTotalStock(item.id, newTotal);
+          await dataStore.items.syncTotalStock(item.id, newTotal);
           showSuccess(`Reduced ${data.quantity} units from ${item.name}`);
         }
       } catch (error) {
@@ -461,10 +459,10 @@ export default function InventoryPage() {
   }
 
   function cleanup() {
-    if (unsubscribeInventory) unsubscribeInventory();
+    if (unsubscribeItems) unsubscribeItems();
     if (unsubscribeCategories) unsubscribeCategories();
     if (unsubscribeStocks) unsubscribeStocks();
-    dataStore.inventory.stopListening();
+    dataStore.items.stopListening();
     dataStore.categories.stopListening();
     dataStore.stocks.stopListening();
   }

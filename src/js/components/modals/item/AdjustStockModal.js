@@ -5,7 +5,7 @@ export default class AdjustStockModal extends BaseModal {
     super({ size: "modal-dialog-centered" });
     this.item = item;
     this.onSave = onSave;
-    this.mode = "stock in";
+    this.isStockIn = true;
   }
 
   getModalHTML() {
@@ -41,12 +41,12 @@ export default class AdjustStockModal extends BaseModal {
 
             <form id="stockForm" novalidate>
               <div class="btn-group w-100 mb-4" role="group">
-                <input type="radio" class="btn-check" name="mode" id="modePositive" value="stock in" checked>
-                <label class="btn btn-outline-success w-50" for="modePositive">
+                <input type="radio" class="btn-check" name="stockDir" id="stockInRadio" value="in" checked>
+                <label class="btn btn-outline-success w-50" for="stockInRadio">
                   <i class="bi bi-plus-circle me-1"></i>Stock In
                 </label>
-                <input type="radio" class="btn-check" name="mode" id="modeNegative" value="stock out">
-                <label class="btn btn-outline-danger w-50" for="modeNegative">
+                <input type="radio" class="btn-check" name="stockDir" id="stockOutRadio" value="out">
+                <label class="btn btn-outline-danger w-50" for="stockOutRadio">
                   <i class="bi bi-dash-circle me-1"></i>Stock Out
                 </label>
               </div>
@@ -127,8 +127,8 @@ export default class AdjustStockModal extends BaseModal {
   attachEventListeners() {
     const form = this.modal.querySelector("#stockForm");
     const submitBtn = this.modal.querySelector("#submitBtn");
-    const modePositive = this.modal.querySelector("#modePositive");
-    const modeNegative = this.modal.querySelector("#modeNegative");
+    const stockInRadio = this.modal.querySelector("#stockInRadio");
+    const stockOutRadio = this.modal.querySelector("#stockOutRadio");
     const positiveFields = this.modal.querySelector("#positiveFields");
     const negativeFields = this.modal.querySelector("#negativeFields");
     const preview = this.modal.querySelector("#preview");
@@ -142,14 +142,14 @@ export default class AdjustStockModal extends BaseModal {
     const negativeQtyInput = this.modal.querySelector("#negativeQty");
 
     const updateMode = () => {
-      const checkedMode = this.modal.querySelector(
-        'input[name="mode"]:checked'
+      const checkedStockDir = this.modal.querySelector(
+        'input[name="stockDir"]:checked'
       );
-      if (!checkedMode) return;
+      if (!checkedStockDir) return;
 
-      this.mode = checkedMode.value;
+      this.isStockIn = checkedStockDir.value === "in";
 
-      if (this.mode === "stock in") {
+      if (this.isStockIn === true) {
         positiveFields.classList.remove("d-none");
         negativeFields.classList.add("d-none");
         submitBtn.className = "btn btn-success";
@@ -167,7 +167,7 @@ export default class AdjustStockModal extends BaseModal {
     const updatePreview = () => {
       const current = this.item.totalStock || 0;
 
-      if (this.mode === "stock in") {
+      if (this.isStockIn === true) {
         const qty = parseInt(qtyInput.value) || 0;
         const cost = parseFloat(costInput.value) || 0;
 
@@ -203,8 +203,8 @@ export default class AdjustStockModal extends BaseModal {
       }
     };
 
-    modePositive.addEventListener("change", updateMode);
-    modeNegative.addEventListener("change", updateMode);
+    stockInRadio.addEventListener("change", updateMode);
+    stockOutRadio.addEventListener("change", updateMode);
     qtyInput?.addEventListener("input", updatePreview);
     costInput?.addEventListener("input", updatePreview);
     negativeQtyInput?.addEventListener("input", updatePreview);
@@ -212,7 +212,7 @@ export default class AdjustStockModal extends BaseModal {
     const validateForm = () => {
       let isValid = true;
 
-      if (this.mode === "stock in") {
+      if (this.isStockIn === true) {
         const qty = parseInt(qtyInput.value) || 0;
         const cost = parseFloat(costInput.value);
         const date = this.modal.querySelector("#purchaseDate").value;
@@ -259,18 +259,18 @@ export default class AdjustStockModal extends BaseModal {
       if (!validateForm()) return;
 
       const data =
-        this.mode === "stock in"
+        this.isStockIn === true
           ? {
-              mode: "add",
-              quantity: parseInt(qtyInput.value),
+              isStockIn: true,
+              quantity: parseFloat(qtyInput.value),
               cost: parseFloat(costInput.value),
               purchaseDate: new Date(
                 this.modal.querySelector("#purchaseDate").value
               ),
             }
           : {
-              mode: "reduce",
-              quantity: parseInt(negativeQtyInput.value),
+              isStockIn: false,
+              quantity: parseFloat(negativeQtyInput.value),
               reason: this.modal.querySelector("#reason").value,
             };
 

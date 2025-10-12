@@ -15,7 +15,7 @@ class DataStore {
     return this.collections.categories;
   }
 
-  get inventory() {
+  get items() {
     return this.collections.items;
   }
 
