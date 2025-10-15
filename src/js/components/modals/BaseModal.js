@@ -46,7 +46,7 @@ export default class BaseModal {
       if (this.config.focus) {
         this.modal.addEventListener("shown.bs.modal", () => {
           const firstInput = this.modal.querySelector(
-            "input, select, textarea"
+            "input, select, textarea",
           );
           if (firstInput) {
             firstInput.focus();
@@ -68,7 +68,7 @@ export default class BaseModal {
     element,
     isLoading,
     loadingText = "Loading...",
-    originalText = ""
+    originalText = "",
   ) {
     if (isLoading) {
       element.disabled = true;
@@ -106,8 +106,17 @@ export default class BaseModal {
   }
 
   getModalHTML() {
-    // To be implemented by child classes
-    throw new Error("getModalHTML method must be implemented by child classes");
+    return `
+      <div class="modal-dialog ${this.config.size}">
+        <div class="modal-content">
+          ${this.getModalContent()}
+        </div>
+      </div>
+    `;
+  }
+
+  getModalContent() {
+    throw new Error("getModalContent() must be implemented by subclass");
   }
 
   attachEventListeners() {
