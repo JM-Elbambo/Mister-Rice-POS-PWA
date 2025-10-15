@@ -1,3 +1,4 @@
+import toastManager from "../../ToastManager.js";
 import BaseModal from "../BaseModal.js";
 
 export default class ViewItemModal extends BaseModal {
@@ -38,7 +39,7 @@ export default class ViewItemModal extends BaseModal {
                               <span class="badge bg-secondary">
                                 <i class="bi bi-tag me-1"></i>
                                 ${this.sanitizeHTML(
-                                  this.item.categoryName || "Uncategorized"
+                                  this.item.categoryName || "Uncategorized",
                                 )}
                               </span>
                             </td>
@@ -47,11 +48,9 @@ export default class ViewItemModal extends BaseModal {
                             <td class="fw-semibold text-muted">Barcode:</td>
                             <td>
                               <code class="bg-body-secondary px-2 py-1 rounded">${this.sanitizeHTML(
-                                this.item.barcode
+                                this.item.barcode,
                               )}</code>
-                              <button class="btn btn-sm btn-outline-secondary ms-2" onclick="navigator.clipboard.writeText('${
-                                this.item.barcode
-                              }')" title="Copy barcode">
+                              <button id="copyBarcodeBtn" class="btn btn-sm btn-outline-secondary ms-2" title="Copy to clipboard">
                                 <i class="bi bi-copy"></i>
                               </button>
                             </td>
@@ -60,7 +59,7 @@ export default class ViewItemModal extends BaseModal {
                             <td class="fw-semibold text-muted">Selling Price:</td>
                             <td class="h6 mb-0 text-success">
                               <i class="bi bi-currency-dollar me-1"></i>$${this.formatCurrency(
-                                this.item.price
+                                this.item.price,
                               )}
                             </td>
                           </tr>
@@ -88,7 +87,7 @@ export default class ViewItemModal extends BaseModal {
                             <td class="fw-semibold text-muted">Total Value:</td>
                             <td class="h6 mb-0 text-primary">
                               <i class="bi bi-calculator me-1"></i>$${this.formatCurrency(
-                                this.item.totalStock * this.item.price
+                                this.item.totalStock * this.item.price,
                               )}
                             </td>
                           </tr>
@@ -135,12 +134,12 @@ export default class ViewItemModal extends BaseModal {
       this.item.totalStock === 0
         ? { label: "Out of Stock", class: "bg-danger", icon: "bi-x-circle" }
         : this.item.totalStock <= this.item.minStock
-        ? {
-            label: "Low Stock",
-            class: "bg-warning text-dark",
-            icon: "bi-exclamation-triangle",
-          }
-        : { label: "In Stock", class: "bg-success", icon: "bi-check-circle" };
+          ? {
+              label: "Low Stock",
+              class: "bg-warning text-dark",
+              icon: "bi-exclamation-triangle",
+            }
+          : { label: "In Stock", class: "bg-success", icon: "bi-check-circle" };
 
     return `<span class="badge ${statusBadge.class}">
       <i class="${statusBadge.icon} me-1"></i>${statusBadge.label || "Unknown"}
@@ -166,22 +165,18 @@ export default class ViewItemModal extends BaseModal {
       });
     }
 
-    const copyBtn = this.modal.querySelector('[title="Copy barcode"]');
+    const copyBtn = this.modal.querySelector("#copyBarcodeBtn");
     if (copyBtn) {
       copyBtn.addEventListener("click", (e) => {
         e.preventDefault();
-        navigator.clipboard.writeText(this.item.barcode).then(() => {
-          const originalHTML = copyBtn.innerHTML;
-          copyBtn.innerHTML = '<i class="bi bi-check text-success"></i>';
-          copyBtn.classList.add("btn-success");
-          copyBtn.classList.remove("btn-outline-secondary");
-
-          setTimeout(() => {
-            copyBtn.innerHTML = originalHTML;
-            copyBtn.classList.remove("btn-success");
-            copyBtn.classList.add("btn-outline-secondary");
-          }, 1500);
-        });
+        navigator.clipboard
+          .writeText(this.item.barcode)
+          .then(() => {
+            toastManager.showSuccess("Barcode copied to clipboard!");
+          })
+          .catch(() => {
+            toastManager.showError("Failed to copy barcode.");
+          });
       });
     }
   }
