@@ -6,7 +6,7 @@ import TableFilter from "../components/TableFilter.js";
 import AddItemModal from "../components/modals/item/AddItemModal.js";
 import ViewItemModal from "../components/modals/item/ViewItemModal.js";
 import EditItemModal from "../components/modals/item/EditItemModal.js";
-import AdjustStockModal from "../components/modals/item/AdjustStockModal.js";
+import ManageStockModal from "../components/modals/item/ManageStockModal.js";
 import toastManager from "../components/ToastManager.js";
 
 export default function InventoryPage() {
@@ -58,7 +58,7 @@ export default function InventoryPage() {
     },
     {
       label: "Stock",
-      onClick: showAdjustStockModal,
+      onClick: showManageStockModal,
       className: "btn-outline-success btn-sm",
     },
   ];
@@ -379,7 +379,7 @@ export default function InventoryPage() {
   }
 
   async function showViewItemModal(item) {
-    ViewItemModal.show(item, showEditItemModal, showAdjustStockModal);
+    ViewItemModal.show(item, showEditItemModal, showManageStockModal);
   }
 
   async function showEditItemModal(item) {
@@ -398,8 +398,8 @@ export default function InventoryPage() {
     );
   }
 
-  async function showAdjustStockModal(item) {
-    AdjustStockModal.show(item, async (item, data) => {
+  async function showManageStockModal(item) {
+    ManageStockModal.show(item, async (item, data) => {
       try {
         if (data.isStockIn === true) {
           await dataStore.stocks.addStock(

@@ -1,6 +1,6 @@
 import BaseModal from "../BaseModal.js";
 
-export default class AdjustStockModal extends BaseModal {
+export default class ManageStockModal extends BaseModal {
   constructor(item, onSave) {
     super({ size: "modal-dialog-centered" });
     this.item = item;
@@ -12,7 +12,7 @@ export default class AdjustStockModal extends BaseModal {
     return `
       <div class="modal-header">
         <h5 class="modal-title">
-          <i class="bi bi-box-seam me-2"></i>Adjust Stock
+          <i class="bi bi-box-seam me-2"></i>Manage Stock
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
@@ -284,6 +284,6 @@ export default class AdjustStockModal extends BaseModal {
   }
 
   static show(item, onSave) {
-    return new AdjustStockModal(item, onSave).create().show();
+    return new ManageStockModal(item, onSave).create().show();
   }
 }
