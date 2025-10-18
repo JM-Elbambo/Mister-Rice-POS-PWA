@@ -29,7 +29,7 @@ export default function InventoryPage() {
   main.appendChild(paginationContainer);
 
   let filteredData = [];
-  let appliedFilters = { search: "", filters: {}, sort: "" };
+  let appliedFilters = { search: "", filters: {}, sort: "name" };
   let currentPage = 1;
   let unsubscribeItems = null;
   let unsubscribeCategories = null;
