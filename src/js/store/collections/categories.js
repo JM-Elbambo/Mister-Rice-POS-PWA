@@ -14,6 +14,7 @@ class CategoriesCollection extends BaseCollection {
     return this.data;
   }
 
+  // TODO: Use this as persistent listener instead of subscribing to changes manually
   syncIdNameMap() {
     this.idNameMap = new Map(this.data.map((cat) => [cat.id, cat.name]));
   }

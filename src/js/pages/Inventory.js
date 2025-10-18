@@ -3,6 +3,7 @@ import QuickStats from "../components/QuickStats.js";
 import Table from "../components/Table.js";
 import Pagination from "../components/Pagination.js";
 import TableFilter from "../components/TableFilter.js";
+import ManageCategoriesModal from "../components/modals/ManageCategoriesModal.js";
 import AddItemModal from "../components/modals/item/AddItemModal.js";
 import ViewItemModal from "../components/modals/item/ViewItemModal.js";
 import EditItemModal from "../components/modals/item/EditItemModal.js";
@@ -14,8 +15,8 @@ export default function InventoryPage() {
   main.className = "container mb-4";
 
   const statsContainer = document.createElement("div");
-  const addButtonContainer = document.createElement("div");
-  addButtonContainer.className = "d-flex justify-content-end mb-3";
+  const headerButtonsContainer = document.createElement("div");
+  headerButtonsContainer.className = "d-flex justify-content-end mb-3";
   const filtersContainer = document.createElement("div");
   const tableContainer = document.createElement("div");
   const paginationContainer = document.createElement("div");
@@ -23,7 +24,7 @@ export default function InventoryPage() {
     "d-flex justify-content-between align-items-center mt-3";
 
   main.appendChild(statsContainer);
-  main.appendChild(addButtonContainer);
+  main.appendChild(headerButtonsContainer);
   main.appendChild(filtersContainer);
   main.appendChild(tableContainer);
   main.appendChild(paginationContainer);
@@ -141,17 +142,17 @@ export default function InventoryPage() {
   }
 
   function renderAll() {
-    if (!main.contains(addButtonContainer)) {
+    if (!main.contains(headerButtonsContainer)) {
       main.innerHTML = "";
       main.appendChild(statsContainer);
-      main.appendChild(addButtonContainer);
+      main.appendChild(headerButtonsContainer);
       main.appendChild(filtersContainer);
       main.appendChild(tableContainer);
       main.appendChild(paginationContainer);
     }
 
     renderStats();
-    renderAddButton();
+    renderHeaderButtons();
     renderFilters();
     renderTable();
     renderPagination();
@@ -205,13 +206,23 @@ export default function InventoryPage() {
     statsContainer.appendChild(QuickStats(stats));
   }
 
-  function renderAddButton() {
-    addButtonContainer.innerHTML = "";
-    const btn = document.createElement("button");
-    btn.className = "btn btn-primary";
-    btn.innerHTML = '<i class="bi bi-plus-lg me-2"></i>Add Product';
-    btn.onclick = showAddItemModal;
-    addButtonContainer.appendChild(btn);
+  function renderHeaderButtons() {
+    headerButtonsContainer.innerHTML = "";
+
+    // Manage categories
+    const manageCategoriesBtn = document.createElement("button");
+    manageCategoriesBtn.className = "btn btn-outline-secondary me-2";
+    manageCategoriesBtn.innerHTML =
+      '<i class="bi bi-tags me-2"></i>Manage Categories';
+    manageCategoriesBtn.onclick = showManageCategoriesModal;
+    headerButtonsContainer.appendChild(manageCategoriesBtn);
+
+    // Add product
+    const addProductBtn = document.createElement("button");
+    addProductBtn.className = "btn btn-outline-primary";
+    addProductBtn.innerHTML = '<i class="bi bi-plus-lg me-2"></i>Add Product';
+    addProductBtn.onclick = showAddItemModal;
+    headerButtonsContainer.appendChild(addProductBtn);
   }
 
   function renderFilters() {
@@ -364,6 +375,15 @@ export default function InventoryPage() {
     appliedFilters = newFilters;
     currentPage = 1;
     updateData();
+  }
+
+  async function showManageCategoriesModal() {
+    ManageCategoriesModal.show(
+      (name) => dataStore.categories.addCategory(name),
+      (id, newName) => dataStore.categories.updateCategory(id, newName),
+      (id) => dataStore.categories.deleteCategory(id),
+      () => dataStore.categories.data,
+    );
   }
 
   async function showAddItemModal() {
