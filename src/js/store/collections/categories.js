@@ -6,6 +6,14 @@ class CategoriesCollection extends BaseCollection {
     this.idNameMap = new Map();
   }
 
+  // Override fetch to sort categories by name
+  async fetch() {
+    await super.fetch();
+
+    this.data.sort((a, b) => a.name.localeCompare(b.name));
+    return this.data;
+  }
+
   syncIdNameMap() {
     this.idNameMap = new Map(this.data.map((cat) => [cat.id, cat.name]));
   }
@@ -38,7 +46,6 @@ class CategoriesCollection extends BaseCollection {
     ];
   }
 
-  // Add new category
   async addCategory(name) {
     const trimmedName = name.trim();
 
@@ -53,7 +60,6 @@ class CategoriesCollection extends BaseCollection {
     return await this.add({ name: trimmedName });
   }
 
-  // Update category name
   async updateCategory(id, newName) {
     const trimmedName = newName.trim();
 
@@ -69,7 +75,6 @@ class CategoriesCollection extends BaseCollection {
     await this.update(id, { name: trimmedName });
   }
 
-  // Delete category
   async deleteCategory(id) {
     await this.delete(id);
   }
