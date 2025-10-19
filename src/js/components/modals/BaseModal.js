@@ -1,3 +1,11 @@
+/**
+ * BaseModal - Abstract base class for creating Bootstrap modals
+ * @param {Object} config - Modal configuration
+ * @param {string} [config.size="modal-dialog-centered"] - Bootstrap modal size class
+ * @param {boolean|string} [config.backdrop=true] - Enable backdrop (true/false/"static")
+ * @param {boolean} [config.keyboard=true] - Close modal on ESC key
+ * @param {boolean} [config.focus=true] - Auto-focus first input when shown
+ */
 export default class BaseModal {
   constructor(config = {}) {
     this.config = {
