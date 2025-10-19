@@ -11,7 +11,7 @@ export default function Table(
   headers = [],
   rows = [],
   actions = null,
-  formatters = {}
+  formatters = {},
 ) {
   const table = document.createElement("table");
   table.className = "table table-striped align-middle";

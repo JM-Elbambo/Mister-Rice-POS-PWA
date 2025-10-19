@@ -50,17 +50,14 @@ export default function InventoryPage() {
     {
       label: "View",
       onClick: showViewItemModal,
-      className: "btn-outline-primary btn-sm",
     },
     {
       label: "Edit",
       onClick: showEditItemModal,
-      className: "btn-outline-secondary btn-sm",
     },
     // {
     //   label: "Stock",
     //   onClick: showManageStockModal,
-    //   className: "btn-outline-success btn-sm",
     // },
   ];
 
