@@ -379,49 +379,35 @@ export default function InventoryPage() {
 
   async function showManageCategoriesModal() {
     CategoriesModal.show(
-      async (name) => {
-        try {
-          await dataStore.categories.addCategory(name);
-          toastManager.showSuccess(`Category "${name}" added successfully.`);
-        } catch (error) {
-          toastManager.showError("Failed to add category. " + error.message);
-          throw error;
-        }
-      },
-      async (id, oldName, newName) => {
-        try {
-          await dataStore.categories.updateCategory(id, newName);
-          toastManager.showSuccess(
-            `Category "${oldName}" renamed to "${newName}"`,
-          );
-        } catch (error) {
-          toastManager.showError("Failed to update category. " + error.message);
-          throw error;
-        }
-      },
-      async (id, categoryName) => {
-        try {
-          await dataStore.categories.deleteCategory(id);
-          toastManager.showSuccess(`Category "${categoryName}" deleted`);
-        } catch (error) {
-          toastManager.showError("Failed to delete category. " + error.message);
-          throw error;
-        }
-      },
+      handleModalAction(
+        (name) => dataStore.categories.addCategory(name),
+        (name) => `Category "${name}" added successfully.`,
+        "Failed to add category.",
+      ),
+      handleModalAction(
+        (id, newName) => dataStore.categories.updateCategory(id, newName),
+        (id, newName) => `Category "${newName}" renamed successfully"`,
+        "Failed to update category",
+      ),
+      handleModalAction(
+        (id, categoryName) => dataStore.categories.deleteCategory(id),
+        (id, categoryName) =>
+          `Category "${categoryName}" deleted successfully.`,
+        "Failed to delete category.",
+      ),
       () => dataStore.categories.data,
     );
   }
 
   async function showAddItemModal() {
-    AddItemModal.show(dataStore.categories.data, async (newItem) => {
-      try {
-        await dataStore.items.addProduct(newItem);
-        toastManager.showSuccess("Product added successfully.");
-      } catch (error) {
-        toastManager.showError("Failed to add product. " + error.message);
-        throw error;
-      }
-    });
+    AddItemModal.show(
+      dataStore.categories.data,
+      handleModalAction(
+        (newItem) => dataStore.items.addProduct(newItem),
+        () => `Product ${newItem.name} added successfully.`,
+        "Failed to add product.",
+      ),
+    );
   }
 
   async function showViewItemModal(item) {
@@ -432,48 +418,51 @@ export default function InventoryPage() {
     EditItemModal.show(
       item,
       dataStore.categories.data,
-      async (itemId, updatedData) => {
-        try {
-          await dataStore.items.updateProduct(itemId, updatedData);
-          toastManager.showSuccess("Product updated successfully.");
-        } catch (error) {
-          toastManager.showError("Failed to update product. " + error.message);
-          throw error;
-        }
-      },
+      handleModalAction(
+        (itemId, updatedData) =>
+          dataStore.items.updateProduct(itemId, updatedData),
+        () => `Product ${item.name} updated successfully.`,
+        "Failed to update product.",
+      ),
     );
   }
 
   async function showManageStockModal(item) {
-    ManageStockModal.show(item, async (item, data) => {
+    ManageStockModal.show(
+      item,
+      handleModalAction(
+        (item, quantity, cost, purchaseDate) =>
+          dataStore.stocks.addStock(item.id, quantity, cost, purchaseDate),
+        (item, quantity, cost, purchaseDate) =>
+          `Added ${quantity} units to ${item.name}.`,
+        "Failed to add stock.",
+      ),
+      handleModalAction(
+        (item, quantity, reason) =>
+          dataStore.stocks.reduceStock(item.id, quantity, reason),
+        (item, quantity, reason) =>
+          `Reduced ${quantity} units from ${item.name}.`,
+        "Failed to reduce stock.",
+      ),
+    );
+  }
+
+  function handleModalAction(
+    action,
+    successMsg = "Action completed successfully.",
+    errorPrefix = "Action failed.",
+  ) {
+    return async (...args) => {
       try {
-        if (data.isStockIn === true) {
-          await dataStore.stocks.addStock(
-            item.id,
-            data.quantity,
-            data.cost,
-            data.purchaseDate,
-          );
-          toastManager.showSuccess(
-            `Added ${data.quantity} units to ${item.name}.`,
-          );
-        } else {
-          await dataStore.stocks.reduceStock(
-            item.id,
-            data.quantity,
-            // data.reason
-          );
-          toastManager.showSuccess(
-            `Reduced ${data.quantity} units from ${item.name}.`,
-          );
-        }
+        await action(...args);
+        const msg =
+          typeof successMsg === "function" ? successMsg(...args) : successMsg;
+        toastManager.showSuccess(msg);
       } catch (error) {
-        toastManager.showError(
-          "Failed to update totalStock . " + error.message,
-        );
+        toastManager.showError(`${errorPrefix} ${error.message}`);
         throw error;
       }
-    });
+    };
   }
 
   function getStatus(item) {

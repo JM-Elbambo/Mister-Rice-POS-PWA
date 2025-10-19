@@ -62,7 +62,7 @@ class StocksCollection extends BaseCollection {
     return await this.add(stockData);
   }
 
-  async reduceStock(itemId, quantityToReduce) {
+  async reduceStock(itemId, quantityToReduce, reason) {
     const stocks = this.getAvailableByItem(itemId);
     let remaining = quantityToReduce;
     const updates = [];
@@ -90,8 +90,8 @@ class StocksCollection extends BaseCollection {
         updateDoc(doc(db, this.collectionName, u.id), {
           remaining: u.remaining,
           lastUpdated: new Date().toISOString(),
-        })
-      )
+        }),
+      ),
     );
 
     return updates;

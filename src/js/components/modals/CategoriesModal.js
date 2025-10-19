@@ -215,8 +215,7 @@ export default class CategoriesModal extends BaseModal {
       return;
     }
 
-    const oldName = category.name;
-    if (newName === oldName) {
+    if (newName === category.name) {
       this.cancelEdit(item, category);
       return;
     }
@@ -229,7 +228,7 @@ export default class CategoriesModal extends BaseModal {
     saveBtn.disabled = true;
 
     try {
-      await this.onUpdate(category.id, oldName, newName);
+      await this.onUpdate(category.id, newName);
       this.editingId = null;
       await this.refreshList();
     } catch (error) {

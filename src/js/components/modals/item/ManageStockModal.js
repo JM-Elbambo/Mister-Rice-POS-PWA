@@ -1,10 +1,11 @@
 import BaseModal from "../BaseModal.js";
 
 export default class ManageStockModal extends BaseModal {
-  constructor(item, onSave) {
+  constructor(item, onStockIn, onStockOut) {
     super({ size: "modal-dialog-centered" });
     this.item = item;
-    this.onSave = onSave;
+    this.onStockIn = onStockIn;
+    this.onStockOut = onStockOut;
     this.isStockIn = true;
   }
 
@@ -254,36 +255,35 @@ export default class ManageStockModal extends BaseModal {
       e.preventDefault();
       if (!validateForm()) return;
 
-      const data =
-        this.isStockIn === true
-          ? {
-              isStockIn: true,
-              quantity: parseFloat(qtyInput.value),
-              cost: parseFloat(costInput.value),
-              purchaseDate: new Date(
-                this.modal.querySelector("#purchaseDate").value,
-              ),
-            }
-          : {
-              isStockIn: false,
-              quantity: parseFloat(negativeQtyInput.value),
-              reason: this.modal.querySelector("#reason").value,
-            };
-
-      this.setLoading(submitBtn, true, "Processing...", submitBtn.innerHTML);
+      const loadingMsg = this.isStockIn
+        ? "Adding stock..."
+        : "Reducing stock...";
+      this.setLoading(submitBtn, true, loadingMsg, submitBtn.innerHTML);
 
       try {
-        await this.onSave(this.item, data);
+        if (this.isStockIn === true) {
+          await this.onStockIn(
+            this.item,
+            parseFloat(qtyInput.value),
+            parseFloat(costInput.value),
+            new Date(this.modal.querySelector("#purchaseDate").value),
+          );
+        } else {
+          await this.onStockOut(
+            this.item,
+            parseFloat(negativeQtyInput.value),
+            this.modal.querySelector("#reason").value,
+          );
+        }
         this.hide();
       } catch (error) {
         this.setLoading(submitBtn, false, "", submitBtn.innerHTML);
+        updateMode();
       }
     });
-
-    updateMode();
   }
 
-  static show(item, onSave) {
-    return new ManageStockModal(item, onSave).create().show();
+  static show(item, onStockIn, onStockOut) {
+    return new ManageStockModal(item, onStockIn, onStockOut).create().show();
   }
 }
