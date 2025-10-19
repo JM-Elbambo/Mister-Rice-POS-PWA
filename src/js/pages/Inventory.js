@@ -57,11 +57,11 @@ export default function InventoryPage() {
       onClick: showEditItemModal,
       className: "btn-outline-secondary btn-sm",
     },
-    {
-      label: "Stock",
-      onClick: showManageStockModal,
-      className: "btn-outline-success btn-sm",
-    },
+    // {
+    //   label: "Stock",
+    //   onClick: showManageStockModal,
+    //   className: "btn-outline-success btn-sm",
+    // },
   ];
 
   async function init() {
