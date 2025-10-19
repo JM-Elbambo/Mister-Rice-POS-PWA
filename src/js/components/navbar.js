@@ -46,7 +46,7 @@ export default function Navbar(activePath = "/pos", hasAccess = true) {
                 ? '<span class="badge bg-success d-inline-flex align-items-center">Online</span>'
                 : ""
             }
-            <button id="themeToggle" class="btn btn-outline-secondary btn-sm">
+            <button id="themeToggle" class="btn btn-outline-secondary btn-sm" title="Toggle dark/light mode">
               <i class="bi bi-sun-fill" id="lightIcon"></i>
               <i class="bi bi-moon-fill d-none" id="darkIcon"></i>
             </button>
