@@ -15,38 +15,9 @@ class StocksCollection extends BaseCollection {
 
     this.query = query(
       collection(db, this.collectionName),
-      where("remaining", ">", 0)
+      where("remaining", ">", 0),
     );
     this.itemTotals = new Map();
-  }
-
-  async fetch() {
-    if (this.loading) return this.data;
-
-    this.loading = true;
-    this.error = null;
-    this.notify();
-
-    try {
-      const q = query(
-        collection(db, this.collectionName),
-        where("remaining", ">", 0)
-      );
-      const snapshot = await getDocs(q);
-      this.data = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      this.error = null;
-    } catch (error) {
-      console.error(`Error fetching ${this.collectionName}:`, error);
-      this.error = error;
-    } finally {
-      this.loading = false;
-      this.notify();
-    }
-
-    return this.data;
   }
 
   async addStock(itemId, quantity, cost, purchaseDate = new Date()) {
