@@ -429,7 +429,7 @@ export default function InventoryPage() {
             data.purchaseDate,
           );
           toastManager.showSuccess(
-            `Added ${data.quantity} units to ${item.name}`,
+            `Added ${data.quantity} units to ${item.name}.`,
           );
         } else {
           await dataStore.stocks.reduceStock(
@@ -438,11 +438,13 @@ export default function InventoryPage() {
             // data.reason
           );
           toastManager.showSuccess(
-            `Reduced ${data.quantity} units from ${item.name}`,
+            `Reduced ${data.quantity} units from ${item.name}.`,
           );
         }
       } catch (error) {
-        toastManager.showError(error.message || "Failed to update totalStock");
+        toastManager.showError(
+          "Failed to update totalStock . " + error.message,
+        );
         throw error;
       }
     });

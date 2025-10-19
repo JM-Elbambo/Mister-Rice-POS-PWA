@@ -270,12 +270,12 @@ export default class ManageStockModal extends BaseModal {
               reason: this.modal.querySelector("#reason").value,
             };
 
+      this.setLoading(submitBtn, true, "Processing...", submitBtn.innerHTML);
+
       try {
-        this.setLoading(submitBtn, true, "Processing...", submitBtn.innerHTML);
         await this.onSave(this.item, data);
         this.hide();
       } catch (error) {
-        this.showError(error.message || "Failed to update stock");
         this.setLoading(submitBtn, false, "", submitBtn.innerHTML);
       }
     });
