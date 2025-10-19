@@ -409,9 +409,9 @@ export default function InventoryPage() {
       async (itemId, updatedData) => {
         try {
           await dataStore.items.updateProduct(itemId, updatedData);
-          toastManager.showSuccess("Product updated successfully");
+          toastManager.showSuccess("Product updated successfully.");
         } catch (error) {
-          toastManager.showError("Failed to update product");
+          toastManager.showError("Failed to update product. " + error.message);
           throw error;
         }
       },

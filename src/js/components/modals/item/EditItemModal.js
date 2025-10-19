@@ -138,12 +138,12 @@ export default class EditItemModal extends BaseModal {
         lastUpdated: new Date().toISOString(),
       };
 
+      this.setLoading(saveBtn, true, "Saving...", saveBtn.innerHTML);
+
       try {
-        this.setLoading(saveBtn, true, "Saving...", saveBtn.innerHTML);
         await this.onSave(this.item.id, updatedItem);
         this.hide();
       } catch (error) {
-        this.showError("Failed to update product. Please try again.");
         this.setLoading(
           saveBtn,
           false,
