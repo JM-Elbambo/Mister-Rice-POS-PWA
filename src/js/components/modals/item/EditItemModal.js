@@ -28,7 +28,7 @@ export default class EditItemModal extends BaseModal {
       <div class="modal-body">
         <form id="editProductForm" novalidate>
           <div class="mb-3">
-            <label for="productName" class="form-label">Product Name <span class="text-danger">*</span></label>
+            <label for="productName" class="form-label">Name <span class="text-danger">*</span></label>
             <input 
               type="text" 
               class="form-control" 
@@ -36,7 +36,7 @@ export default class EditItemModal extends BaseModal {
               value="${this.sanitizeHTML(this.item.name)}" 
               required
             >
-            <div class="invalid-feedback">Product name is required.</div>
+            <div class="invalid-feedback">Name is required.</div>
           </div>
 
           <div class="mb-3">

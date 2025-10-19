@@ -52,7 +52,7 @@ export default class CategoriesModal extends BaseModal {
                       Name <span class="text-danger">*</span>
                     </label>
                     <input type="text" class="form-control" id="categoryName" required>
-                    <div class="invalid-feedback">Category name is required.</div>
+                    <div class="invalid-feedback">Name is required.</div>
                   </div>
                   <button type="submit" class="btn btn-primary w-100" id="addBtn">
                     <i class="bi bi-plus-lg me-2"></i>Add Category
