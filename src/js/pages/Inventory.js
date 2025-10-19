@@ -390,9 +390,9 @@ export default function InventoryPage() {
     AddItemModal.show(dataStore.categories.data, async (newItem) => {
       try {
         await dataStore.items.addProduct(newItem);
-        toastManager.showSuccess("Product added successfully");
+        toastManager.showSuccess("Product added successfully.");
       } catch (error) {
-        toastManager.showError("Failed to add product");
+        toastManager.showError("Failed to add product. " + error.message);
         throw error;
       }
     });

@@ -135,12 +135,12 @@ export default class AddItemModal extends BaseModal {
         lastUpdated: new Date().toISOString(),
       };
 
+      this.setLoading(saveBtn, true, "Adding...", saveBtn.innerHTML);
+
       try {
-        this.setLoading(saveBtn, true, "Adding...", saveBtn.innerHTML);
         await this.onSave(newItem);
         this.hide();
       } catch (error) {
-        this.showError("Failed to add product. Please try again.");
         this.setLoading(
           saveBtn,
           false,
