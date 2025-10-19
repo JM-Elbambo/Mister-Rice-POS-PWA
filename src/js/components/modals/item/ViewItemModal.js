@@ -106,8 +106,8 @@ export default class ViewItemModal extends BaseModal {
                   <button type="button" class="btn btn-outline-primary" id="editBtn">
                     <i class="bi bi-pencil-square me-2"></i>Edit Product
                   </button>
-                  <button type="button" class="btn btn-outline-success" id="manageStockBtn">
-                    <i class="bi bi-box-seam me-2"></i>Manage Stock
+                  <button type="button" class="btn btn-outline-success" id="manageStockBtn" disabled>
+                    <i class="bi bi-box-seam me-2"></i>Manage Stock (Coming Soon!)
                   </button>
                 </div>
               </div>
@@ -117,7 +117,7 @@ export default class ViewItemModal extends BaseModal {
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-          <i class="bi bi-x-lg me-2"></i>Close
+          Close
         </button>
       </div>
     `;
@@ -142,7 +142,7 @@ export default class ViewItemModal extends BaseModal {
 
   attachEventListeners() {
     const editBtn = this.modal.querySelector("#editBtn");
-    const manageStockBtn = this.modal.querySelector("#manageStockBtn");
+    // const manageStockBtn = this.modal.querySelector("#manageStockBtn");
 
     if (editBtn) {
       editBtn.addEventListener("click", () => {
@@ -151,13 +151,13 @@ export default class ViewItemModal extends BaseModal {
       });
     }
 
-    if (manageStockBtn) {
-      manageStockBtn.addEventListener("click", () => {
-        this.hide();
-        if (this.onManageStock)
-          setTimeout(() => this.onManageStock(this.item), 150);
-      });
-    }
+    // if (manageStockBtn) {
+    //   manageStockBtn.addEventListener("click", () => {
+    //     this.hide();
+    //     if (this.onManageStock)
+    //       setTimeout(() => this.onManageStock(this.item), 150);
+    //   });
+    // }
 
     const copyBtn = this.modal.querySelector("#copyBarcodeBtn");
     if (copyBtn) {

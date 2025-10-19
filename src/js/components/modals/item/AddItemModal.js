@@ -89,7 +89,7 @@ export default class AddItemModal extends BaseModal {
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
         <button type="submit" form="addProductForm" class="btn btn-primary" id="saveBtn">
-          <i class="bi bi-plus-lg me-2"></i>Add Product
+          Add Product
         </button>
       </div>
     `;

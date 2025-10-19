@@ -65,7 +65,7 @@ export default class CategoriesModal extends BaseModal {
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-          <i class="bi bi-x-lg me-2"></i>Close
+          Close
         </button>
       </div>
     `;

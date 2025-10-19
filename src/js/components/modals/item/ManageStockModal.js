@@ -115,7 +115,7 @@ export default class ManageStockModal extends BaseModal {
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
         <button type="submit" form="stockForm" class="btn btn-success" id="submitBtn">
-          <i class="bi bi-check-lg me-2"></i>Confirm
+          Confirm
         </button>
       </div>
     `;

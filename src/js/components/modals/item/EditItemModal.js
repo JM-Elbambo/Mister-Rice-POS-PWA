@@ -94,7 +94,7 @@ export default class EditItemModal extends BaseModal {
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
         <button type="submit" form="editProductForm" class="btn btn-primary" id="saveBtn">
-          <i class="bi bi-check-lg me-2"></i>Save Changes
+          Save Changes
         </button>
       </div>
     `;
@@ -144,12 +144,7 @@ export default class EditItemModal extends BaseModal {
         await this.onSave(this.item.id, updatedItem);
         this.hide();
       } catch (error) {
-        this.setLoading(
-          saveBtn,
-          false,
-          "",
-          '<i class="bi bi-check-lg me-2"></i>Save Changes',
-        );
+        this.setLoading(saveBtn, false, "", "Save Changes");
       }
     });
 
