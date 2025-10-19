@@ -51,11 +51,11 @@ class CategoriesCollection extends BaseCollection {
     const trimmedName = name.trim();
 
     if (!trimmedName) {
-      throw new Error("Category name cannot be empty");
+      throw new Error("Name cannot be empty.");
     }
 
     if (this.exists(trimmedName)) {
-      throw new Error("Category already exists");
+      throw new Error("Name already exists.");
     }
 
     return await this.add({ name: trimmedName });
@@ -65,12 +65,12 @@ class CategoriesCollection extends BaseCollection {
     const trimmedName = newName.trim();
 
     if (!trimmedName) {
-      throw new Error("Category name cannot be empty");
+      throw new Error("Name cannot be empty.");
     }
 
     const existing = this.getByName(trimmedName);
     if (existing && existing.id !== id) {
-      throw new Error("Category name already exists");
+      throw new Error("Name already exists.");
     }
 
     await this.update(id, { name: trimmedName });

@@ -1,10 +1,9 @@
 import BaseModal from "./BaseModal.js";
-import toastManager from "../ToastManager.js";
 
-export default class ManageCategoriesModal extends BaseModal {
-  constructor(onSave, onUpdate, onDelete, onRefresh) {
+export default class CategoriesModal extends BaseModal {
+  constructor(onCreate, onUpdate, onDelete, onRefresh) {
     super({ size: "modal-dialog-centered modal-lg" });
-    this.onSave = onSave;
+    this.onCreate = onCreate;
     this.onUpdate = onUpdate;
     this.onDelete = onDelete;
     this.onRefresh = onRefresh;
@@ -115,15 +114,13 @@ export default class ManageCategoriesModal extends BaseModal {
       }
 
       categoryInput.classList.remove("is-invalid");
+      this.setLoading(addBtn, true, "Adding...", addBtn.innerHTML);
 
       try {
-        this.setLoading(addBtn, true, "Adding...", addBtn.innerHTML);
-        await this.onSave(name);
-        toastManager.showSuccess(`Category "${name}" added`);
+        await this.onCreate(name);
         categoryInput.value = "";
         await this.refreshList();
       } catch (error) {
-        toastManager.showError(error.message || "Failed to add category");
       } finally {
         this.setLoading(
           addBtn,
@@ -227,17 +224,15 @@ export default class ManageCategoriesModal extends BaseModal {
     const saveBtn = item.querySelector(".save-btn");
     const originalHTML = saveBtn.innerHTML;
 
-    try {
-      saveBtn.innerHTML =
-        '<span class="spinner-border spinner-border-sm"></span>';
-      saveBtn.disabled = true;
+    saveBtn.innerHTML =
+      '<span class="spinner-border spinner-border-sm"></span>';
+    saveBtn.disabled = true;
 
-      await this.onUpdate(category.id, newName);
-      toastManager.showSuccess(`Category "${oldName}" renamed to "${newName}"`);
+    try {
+      await this.onUpdate(category.id, oldName, newName);
       this.editingId = null;
       await this.refreshList();
     } catch (error) {
-      toastManager.showError(error.message || "Failed to rename category");
       saveBtn.innerHTML = originalHTML;
       saveBtn.disabled = false;
     }
@@ -281,12 +276,10 @@ export default class ManageCategoriesModal extends BaseModal {
       confirmBtn.disabled = true;
 
       try {
-        await this.onDelete(categoryId);
-        toastManager.showSuccess(`Category "${categoryName}" deleted`);
+        await this.onDelete(categoryId, categoryName);
         bsModal.hide();
         await this.refreshList();
       } catch (error) {
-        toastManager.showError(error.message || "Failed to delete category");
         confirmBtn.innerHTML = '<i class="bi bi-trash me-1"></i>Delete';
         confirmBtn.disabled = false;
       }
@@ -307,8 +300,8 @@ export default class ManageCategoriesModal extends BaseModal {
       : '<p class="text-muted text-center py-4">No categories yet</p>';
   }
 
-  static show(onSave, onUpdate, onDelete, onRefresh) {
-    return new ManageCategoriesModal(onSave, onUpdate, onDelete, onRefresh)
+  static show(onCreate, onUpdate, onDelete, onRefresh) {
+    return new CategoriesModal(onCreate, onUpdate, onDelete, onRefresh)
       .create()
       .show();
   }

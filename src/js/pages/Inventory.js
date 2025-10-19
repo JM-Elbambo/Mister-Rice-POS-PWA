@@ -3,7 +3,7 @@ import QuickStats from "../components/QuickStats.js";
 import Table from "../components/Table.js";
 import Pagination from "../components/Pagination.js";
 import TableFilter from "../components/TableFilter.js";
-import ManageCategoriesModal from "../components/modals/ManageCategoriesModal.js";
+import CategoriesModal from "../components/modals/CategoriesModal.js";
 import AddItemModal from "../components/modals/item/AddItemModal.js";
 import ViewItemModal from "../components/modals/item/ViewItemModal.js";
 import EditItemModal from "../components/modals/item/EditItemModal.js";
@@ -378,10 +378,36 @@ export default function InventoryPage() {
   }
 
   async function showManageCategoriesModal() {
-    ManageCategoriesModal.show(
-      (name) => dataStore.categories.addCategory(name),
-      (id, newName) => dataStore.categories.updateCategory(id, newName),
-      (id) => dataStore.categories.deleteCategory(id),
+    CategoriesModal.show(
+      async (name) => {
+        try {
+          await dataStore.categories.addCategory(name);
+          toastManager.showSuccess(`Category "${name}" added successfully.`);
+        } catch (error) {
+          toastManager.showError("Failed to add category. " + error.message);
+          throw error;
+        }
+      },
+      async (id, oldName, newName) => {
+        try {
+          await dataStore.categories.updateCategory(id, newName);
+          toastManager.showSuccess(
+            `Category "${oldName}" renamed to "${newName}"`,
+          );
+        } catch (error) {
+          toastManager.showError("Failed to update category. " + error.message);
+          throw error;
+        }
+      },
+      async (id, categoryName) => {
+        try {
+          await dataStore.categories.deleteCategory(id);
+          toastManager.showSuccess(`Category "${categoryName}" deleted`);
+        } catch (error) {
+          toastManager.showError("Failed to delete category. " + error.message);
+          throw error;
+        }
+      },
       () => dataStore.categories.data,
     );
   }
