@@ -78,7 +78,6 @@ export default function InventoryPage() {
         (data, loading, error) => {
           if (error) return showErrorState(error);
           if (loading) return;
-          dataStore.categories.syncIdNameMap();
           updateData();
         },
       );
@@ -86,7 +85,6 @@ export default function InventoryPage() {
       unsubscribeStocks = dataStore.stocks.subscribe((data, loading, error) => {
         if (error) return showErrorState(error);
         if (loading) return;
-        dataStore.stocks.syncItemTotals();
         updateData();
       });
 

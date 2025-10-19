@@ -20,6 +20,18 @@ class StocksCollection extends BaseCollection {
     this.itemTotals = new Map();
   }
 
+  processData(rawData) {
+    this.data = rawData;
+    this.itemTotals = new Map();
+
+    for (const stock of this.data) {
+      if (!stock.itemId) continue;
+
+      const current = this.itemTotals.get(stock.itemId) ?? 0;
+      this.itemTotals.set(stock.itemId, current + (stock.remaining ?? 0));
+    }
+  }
+
   async addStock(itemId, quantity, cost, purchaseDate = new Date()) {
     const stockData = {
       itemId,
@@ -72,17 +84,6 @@ class StocksCollection extends BaseCollection {
     return this.data
       .filter((s) => s.itemId === itemId)
       .sort((a, b) => new Date(a.purchaseDate) - new Date(b.purchaseDate));
-  }
-
-  syncItemTotals() {
-    this.itemTotals = new Map();
-
-    for (const stock of this.data) {
-      if (!stock.itemId) continue;
-
-      const current = this.itemTotals.get(stock.itemId) ?? 0;
-      this.itemTotals.set(stock.itemId, current + (stock.remaining ?? 0));
-    }
   }
 }
 

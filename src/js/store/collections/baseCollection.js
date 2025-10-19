@@ -20,19 +20,6 @@ export class BaseCollection {
     this.unsubscribe = null;
   }
 
-  // Subscribe to data changes
-  subscribe(callback) {
-    this.subscribers.add(callback);
-    return () => this.subscribers.delete(callback);
-  }
-
-  // Notify subscribers
-  notify() {
-    this.subscribers.forEach((callback) =>
-      callback(this.data, this.loading, this.error)
-    );
-  }
-
   // Fetch data once
   async fetch() {
     if (this.loading) return this.data;
@@ -45,10 +32,11 @@ export class BaseCollection {
       const target = this.query ?? collection(db, this.collectionName);
       const snapshot = await getDocs(target);
 
-      this.data = snapshot.docs.map((doc) => ({
+      const rawData = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
+      this.processData(rawData);
 
       this.error = null;
     } catch (error) {
@@ -62,6 +50,11 @@ export class BaseCollection {
     return this.data;
   }
 
+  // Override in child class for custom sorting/processing
+  processData(rawData) {
+    this.data = rawData;
+  }
+
   // Setup real-time listener
   listen() {
     if (this.unsubscribe) return; // Already listening
@@ -71,10 +64,11 @@ export class BaseCollection {
     this.unsubscribe = onSnapshot(
       target,
       (snapshot) => {
-        this.data = snapshot.docs.map((doc) => ({
+        const rawData = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
+        this.processData(rawData);
         this.loading = false;
         this.error = null;
         this.notify();
@@ -83,7 +77,20 @@ export class BaseCollection {
         console.error(`${this.collectionName} listener error:`, error);
         this.error = error;
         this.notify();
-      }
+      },
+    );
+  }
+
+  // Subscribe to data changes
+  subscribe(callback) {
+    this.subscribers.add(callback);
+    return () => this.subscribers.delete(callback);
+  }
+
+  // Notify subscribers
+  notify() {
+    this.subscribers.forEach((callback) =>
+      callback(this.data, this.loading, this.error),
     );
   }
 

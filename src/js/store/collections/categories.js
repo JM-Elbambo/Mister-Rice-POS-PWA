@@ -6,16 +6,9 @@ class CategoriesCollection extends BaseCollection {
     this.idNameMap = new Map();
   }
 
-  // Override fetch to sort categories by name
-  async fetch() {
-    await super.fetch();
-
-    this.data.sort((a, b) => a.name.localeCompare(b.name));
-    return this.data;
-  }
-
-  // TODO: Use this as persistent listener instead of subscribing to changes manually
-  syncIdNameMap() {
+  // Custom processing: sort alphabetically
+  processData(rawData) {
+    this.data = rawData.sort((a, b) => a.name.localeCompare(b.name));
     this.idNameMap = new Map(this.data.map((cat) => [cat.id, cat.name]));
   }
 
