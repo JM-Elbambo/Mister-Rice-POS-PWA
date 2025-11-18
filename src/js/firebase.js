@@ -1,6 +1,11 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentSingleTabManager,
+  CACHE_SIZE_UNLIMITED,
+} from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAncK6PWOIx3iMbtnFEgux1cMYfezPpHWo",
@@ -14,4 +19,9 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentSingleTabManager(),
+    cacheSizeBytes: CACHE_SIZE_UNLIMITED,
+  }),
+});
