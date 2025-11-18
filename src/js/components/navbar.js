@@ -43,7 +43,9 @@ export default function Navbar(activePath = "/pos", hasAccess = true) {
           <div class="d-flex gap-3">
             ${
               hasAccess
-                ? '<span class="badge bg-success d-inline-flex align-items-center">Online</span>'
+                ? `<span class="badge bg-success d-inline-flex align-items-center" id="onlineStatus">
+                    <i class="bi bi-wifi me-1"></i>Online
+                  </span>`
                 : ""
             }
             <button id="themeToggle" class="btn btn-outline-secondary btn-sm" title="Toggle dark/light mode">
@@ -112,6 +114,27 @@ export default function Navbar(activePath = "/pos", hasAccess = true) {
       const nextTheme = currentTheme === "light" ? "dark" : "light";
       updateTheme(nextTheme);
     });
+  };
+
+  const initOnlineStatus = () => {
+    const statusBadge = wrapper.querySelector("#onlineStatus");
+    if (!statusBadge) return;
+
+    const updateStatus = () => {
+      if (navigator.onLine) {
+        statusBadge.className =
+          "badge bg-success d-inline-flex align-items-center";
+        statusBadge.innerHTML = '<i class="bi bi-wifi me-1"></i>Online';
+      } else {
+        statusBadge.className =
+          "badge bg-warning text-dark d-inline-flex align-items-center";
+        statusBadge.innerHTML = '<i class="bi bi-wifi-off me-1"></i>Offline';
+      }
+    };
+
+    window.addEventListener("online", updateStatus);
+    window.addEventListener("offline", updateStatus);
+    updateStatus();
   };
 
   // Initialize logout handler
@@ -200,6 +223,7 @@ export default function Navbar(activePath = "/pos", hasAccess = true) {
   };
 
   initTheme();
+  initOnlineStatus();
   initLogout();
   return wrapper;
 }
