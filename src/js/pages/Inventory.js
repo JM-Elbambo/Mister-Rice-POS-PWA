@@ -399,7 +399,7 @@ export default function InventoryPage() {
       dataStore.categories.data,
       handleModalAction(
         (newItem) => dataStore.items.addProduct(newItem),
-        () => `Product ${newItem.name} added successfully.`,
+        (newItem) => `Product ${newItem.name} added successfully.`,
         "Failed to add product.",
       ),
     );
@@ -449,6 +449,20 @@ export default function InventoryPage() {
   ) {
     return async (...args) => {
       try {
+        // Check if offline before awaiting
+        if (!navigator.onLine) {
+          action(...args).catch((error) => {
+            console.error("Background sync error:", error);
+            toastManager.showError(`${errorPrefix} ${error.message}`);
+          });
+
+          const msg =
+            typeof successMsg === "function" ? successMsg(...args) : successMsg;
+          toastManager.showSuccess(msg + " (Will sync when online)");
+          return;
+        }
+
+        // Online - wait for confirmation
         await action(...args);
         const msg =
           typeof successMsg === "function" ? successMsg(...args) : successMsg;
