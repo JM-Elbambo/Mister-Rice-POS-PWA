@@ -1,9 +1,9 @@
 import { auth } from "./firebase";
-import { dataStore } from "./store/index.js";
+import { dataStore } from "./store/index";
 
 // Pages
 import SigninPage from "./pages/Signin";
-import UnauthorizedPage from "./pages/UnauthorizedPage.js";
+import UnauthorizedPage from "./pages/UnauthorizedPage";
 import DashboardPage from "./pages/Dashboard";
 // import PointOfSalePage from "./pages/PointOfSale";
 import InventoryPage from "./pages/Inventory";
