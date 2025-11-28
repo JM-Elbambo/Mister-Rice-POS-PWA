@@ -3,7 +3,6 @@ import { getAuth } from "firebase/auth";
 import {
   initializeFirestore,
   persistentLocalCache,
-  persistentSingleTabManager,
   CACHE_SIZE_UNLIMITED,
 } from "firebase/firestore";
 
@@ -19,9 +18,10 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+
+// Multi-tab support - removed persistentSingleTabManager
 export const db = initializeFirestore(app, {
   localCache: persistentLocalCache({
-    tabManager: persistentSingleTabManager(),
     cacheSizeBytes: CACHE_SIZE_UNLIMITED,
   }),
 });

@@ -9,6 +9,7 @@
 		"build": "webpack --mode production"
 	},
 	"devDependencies": {
+		"copy-webpack-plugin": "^13.0.1",
 		"css-loader": "^7.1.2",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-prettier": "^5.5.4",

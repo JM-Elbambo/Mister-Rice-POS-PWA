@@ -1,30 +1,41 @@
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const CopyPlugin = require("copy-webpack-plugin");
 
 module.exports = {
   entry: "./src/js/index.js",
   output: {
-    filename: "bundle.js",
-    path: path.resolve("dist"),
-    clean: true, // clears dist folder
+    path: path.resolve(__dirname, "dist"),
+    filename: "js/bundle.[contenthash].js",
+    clean: true,
   },
   plugins: [
     new HtmlWebpackPlugin({
       template: "./src/index.html",
     }),
+    new CopyPlugin({
+      patterns: [
+        { from: "public", to: "." }, // Copy everything from public/ to dist/
+      ],
+    }),
   ],
-  devServer: {
-    static: "./dist",
-    port: 3000,
-    open: true,
-  },
   module: {
     rules: [
       {
-        test: /\.css$/i,
+        test: /\.css$/,
         use: ["style-loader", "css-loader"],
+      },
+      {
+        test: /\.(png|svg|jpg|jpeg|gif)$/i,
+        type: "asset/resource",
       },
     ],
   },
-  mode: "development",
+  devServer: {
+    static: {
+      directory: path.join(__dirname, "public"),
+    },
+    port: 3000,
+    hot: true,
+  },
 };
