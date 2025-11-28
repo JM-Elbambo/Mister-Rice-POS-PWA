@@ -101,7 +101,7 @@ export default function InventoryPage() {
     }
   }
 
-  function updateData() {
+  function updateData(excludeFilters = false) {
     if (!initialized) return;
     if (dataStore.items.data.length >= 0) {
       const mappedData = dataStore.items.data.map((item) => ({
@@ -112,7 +112,7 @@ export default function InventoryPage() {
       }));
       filteredData = applyFilters(mappedData, appliedFilters);
     }
-    renderAll();
+    renderAll(excludeFilters);
   }
 
   function showLoadingState() {
@@ -136,7 +136,7 @@ export default function InventoryPage() {
     `;
   }
 
-  function renderAll() {
+  function renderAll(excludeFilters = false) {
     if (!main.contains(headerButtonsContainer)) {
       main.innerHTML = "";
       main.appendChild(statsContainer);
@@ -148,7 +148,7 @@ export default function InventoryPage() {
 
     renderStats();
     renderHeaderButtons();
-    renderFilters();
+    if (!excludeFilters) renderFilters();
     renderTable();
     renderPagination();
   }
@@ -369,7 +369,7 @@ export default function InventoryPage() {
   function handleFilterChange(newFilters) {
     appliedFilters = newFilters;
     currentPage = 1;
-    updateData();
+    updateData(true);
   }
 
   async function showManageCategoriesModal() {
