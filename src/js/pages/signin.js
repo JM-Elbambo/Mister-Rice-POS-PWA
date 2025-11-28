@@ -86,7 +86,9 @@ export default function SigninPage() {
       if (error.code === "auth/popup-closed-by-user") {
         toastManager.showWarning("Sign in popup closed. Please try again.");
       } else {
-        toastManager.showError("Sign in failed. Please try again.");
+        toastManager.showError(
+          "Sign in failed. Please try again.\n" + error.message,
+        );
       }
 
       // Restore button state
