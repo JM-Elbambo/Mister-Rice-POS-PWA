@@ -9,6 +9,7 @@ module.exports = {
     path: path.resolve(__dirname, "dist"),
     filename: "js/bundle.[contenthash].js",
     clean: true,
+    publicPath: "/Mister-Rice-POS-PWA-Build/",
   },
   plugins: [
     new HtmlWebpackPlugin({
