@@ -206,7 +206,7 @@ export default function InventoryPage() {
 
     // Manage categories
     const manageCategoriesBtn = document.createElement("button");
-    manageCategoriesBtn.className = "btn btn-outline-secondary me-2";
+    manageCategoriesBtn.className = "btn btn-outline-primary me-2";
     manageCategoriesBtn.innerHTML =
       '<i class="bi bi-tags me-2"></i>Manage Categories';
     manageCategoriesBtn.onclick = showManageCategoriesModal;
