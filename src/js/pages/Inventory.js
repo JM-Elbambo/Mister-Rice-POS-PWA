@@ -107,7 +107,7 @@ export default function InventoryPage() {
       const mappedData = dataStore.items.data.map((item) => ({
         ...item,
         categoryName:
-          dataStore.categories.idNameMap.get(item.category) ?? "Uncategorized",
+          dataStore.categories.idNameMap.get(item.category) ?? "None",
         totalStock: dataStore.stocks.itemTotals.get(item.id) ?? 0,
       }));
       filteredData = applyFilters(mappedData, appliedFilters);
@@ -261,7 +261,7 @@ export default function InventoryPage() {
       data: [
         item.name,
         item.categoryName,
-        `$${parseFloat(item.price || 0).toFixed(2)}`,
+        `₱${parseFloat(item.price || 0).toFixed(2)}`,
         item.totalStock,
         item.minStock,
         getStatus(item),

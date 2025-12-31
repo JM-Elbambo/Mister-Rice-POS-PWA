@@ -37,7 +37,7 @@ export default class ViewItemModal extends BaseModal {
                           <span class="badge bg-secondary">
                             <i class="bi bi-tag me-1"></i>
                             ${this.sanitizeHTML(
-                              this.item.categoryName || "Uncategorized",
+                              this.item.categoryName || "None",
                             )}
                           </span>
                         </td>
@@ -54,11 +54,9 @@ export default class ViewItemModal extends BaseModal {
                         </td>
                       </tr>
                       <tr>
-                        <td class="fw-semibold text-muted">Selling Price:</td>
+                        <td class="fw-semibold text-muted">Price:</td>
                         <td class="h6 mb-0 text-success">
-                          <i class="bi bi-currency-dollar me-1"></i>$${this.formatCurrency(
-                            this.item.price,
-                          )}
+                          ₱${this.formatCurrency(this.item.price)}
                         </td>
                       </tr>
                       <tr>
@@ -80,9 +78,9 @@ export default class ViewItemModal extends BaseModal {
                         <td>${statusBadge}</td>
                       </tr>
                       <tr>
-                        <td class="fw-semibold text-muted">Total Value:</td>
+                        <td class="fw-semibold text-muted">Total Stock Price:</td>
                         <td class="h6 mb-0 text-primary">
-                          <i class="bi bi-calculator me-1"></i>$${this.formatCurrency(
+                          ₱${this.formatCurrency(
                             this.item.totalStock * this.item.price,
                           )}
                         </td>
