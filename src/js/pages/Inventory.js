@@ -55,10 +55,10 @@ export default function InventoryPage() {
       label: "Edit",
       onClick: showEditItemModal,
     },
-    // {
-    //   label: "Stock",
-    //   onClick: showManageStockModal,
-    // },
+    {
+      label: "Stock",
+      onClick: showManageStockModal,
+    },
   ];
 
   async function init() {

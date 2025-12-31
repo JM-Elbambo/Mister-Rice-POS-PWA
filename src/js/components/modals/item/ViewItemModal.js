@@ -106,8 +106,8 @@ export default class ViewItemModal extends BaseModal {
                   <button type="button" class="btn btn-outline-primary" id="editBtn">
                     <i class="bi bi-pencil-square me-2"></i>Edit Product
                   </button>
-                  <button type="button" class="btn btn-outline-success" id="manageStockBtn" disabled>
-                    <i class="bi bi-box-seam me-2"></i>Manage Stock (Coming Soon!)
+                  <button type="button" class="btn btn-outline-success" id="manageStockBtn">
+                    <i class="bi bi-box-seam me-2"></i>Manage Stock
                   </button>
                 </div>
               </div>
@@ -142,22 +142,25 @@ export default class ViewItemModal extends BaseModal {
 
   attachEventListeners() {
     const editBtn = this.modal.querySelector("#editBtn");
-    // const manageStockBtn = this.modal.querySelector("#manageStockBtn");
+    const manageStockBtn = this.modal.querySelector("#manageStockBtn");
 
     if (editBtn) {
       editBtn.addEventListener("click", () => {
-        this.hide();
-        if (this.onEdit) setTimeout(() => this.onEdit(this.item), 150);
+        if (this.onEdit) {
+          this.hide();
+          this.onEdit(this.item);
+        }
       });
     }
 
-    // if (manageStockBtn) {
-    //   manageStockBtn.addEventListener("click", () => {
-    //     this.hide();
-    //     if (this.onManageStock)
-    //       setTimeout(() => this.onManageStock(this.item), 150);
-    //   });
-    // }
+    if (manageStockBtn) {
+      manageStockBtn.addEventListener("click", () => {
+        if (this.onManageStock) {
+          this.hide();
+          this.onManageStock(this.item);
+        }
+      });
+    }
 
     const copyBtn = this.modal.querySelector("#copySkuBtn");
     if (copyBtn) {

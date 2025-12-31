@@ -59,8 +59,8 @@ export default class ManageStockModal extends BaseModal {
             <div class="mb-3">
               <label for="cost" class="form-label">Unit Cost <span class="text-danger">*</span></label>
               <div class="input-group">
-                <span class="input-group-text">$</span>
-                <input type="number" class="form-control" id="cost" min="0" step="0.01" required>
+                <span class="input-group-text">₱</span>
+                <input type="number" class="form-control" id="cost" value="0" min="0" step="0.01" required>
               </div>
               <div class="invalid-feedback">Must be 0 or greater</div>
             </div>
@@ -96,8 +96,12 @@ export default class ManageStockModal extends BaseModal {
             </div>
           </div>
 
-          <div id="preview" class="alert d-none mt-3">
-            <div class="d-flex justify-content-between mb-2">
+          <div id="preview" class="alert mt-3">
+            <div id="previewCost" class="d-flex justify-content-between mb-2">
+              <span class="fw-semibold">Total Cost:</span>
+              <span id="previewCostValue" class="fw-bold"></span>
+            </div>
+            <div class="d-flex justify-content-between">
               <span class="fw-semibold">Change:</span>
               <span id="previewChange" class="fw-bold"></span>
             </div>
@@ -105,18 +109,12 @@ export default class ManageStockModal extends BaseModal {
               <span class="fw-semibold">New Total:</span>
               <span id="previewTotal" class="fw-bold"></span>
             </div>
-            <div id="previewCost" class="d-flex justify-content-between mt-2 d-none">
-              <span class="fw-semibold">Total Cost:</span>
-              <span id="previewCostValue" class="fw-bold"></span>
-            </div>
           </div>
         </form>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="submit" form="stockForm" class="btn btn-success" id="submitBtn">
-          Confirm
-        </button>
+        <button type="submit" form="stockForm" id="submitBtn"></button>
       </div>
     `;
   }
@@ -150,13 +148,12 @@ export default class ManageStockModal extends BaseModal {
         positiveFields.classList.remove("d-none");
         negativeFields.classList.add("d-none");
         submitBtn.className = "btn btn-success";
-        submitBtn.innerHTML = '<i class="bi bi-plus-circle me-2"></i>Add Stock';
+        submitBtn.innerHTML = "Add Stock";
       } else {
         positiveFields.classList.add("d-none");
         negativeFields.classList.remove("d-none");
         submitBtn.className = "btn btn-danger";
-        submitBtn.innerHTML =
-          '<i class="bi bi-dash-circle me-2"></i>Reduce Stock';
+        submitBtn.innerHTML = "Reduce Stock";
       }
       updatePreview();
     };
@@ -164,7 +161,9 @@ export default class ManageStockModal extends BaseModal {
     const updatePreview = () => {
       const current = this.item.totalStock || 0;
 
+      // Stock in
       if (this.isStockIn === true) {
+        previewCost.classList.remove("d-none");
         const qty = parseInt(qtyInput.value) || 0;
         const cost = parseFloat(costInput.value) || 0;
 
@@ -172,30 +171,36 @@ export default class ManageStockModal extends BaseModal {
           const newTotal = current + qty;
           const totalCost = qty * cost;
 
+          previewCostValue.textContent = `₱${totalCost.toFixed(2)}`;
+
           previewChange.textContent = `+${qty} units`;
           previewTotal.textContent = `${newTotal} units`;
-          previewCostValue.textContent = `$${totalCost.toFixed(2)}`;
-          previewCost.classList.remove("d-none");
           preview.className = "alert alert-success";
-          preview.classList.remove("d-none");
         } else {
-          preview.classList.add("d-none");
+          preview.className = "d-none";
         }
+
+        // Stock out
       } else {
+        previewCost.classList.add("d-none");
         const qty = parseInt(negativeQtyInput.value) || 0;
 
-        if (qty > 0 && qty <= current) {
-          const newTotal = current - qty;
+        if (qty > 0) {
+          if (qty > current) {
+            previewChange.textContent = `-${qty} units`;
+            previewTotal.textContent = `Quantity exceeds current stock`;
+            preview.className = "alert alert-danger";
+          } else {
+            const newTotal = current - qty;
 
-          previewChange.textContent = `-${qty} units`;
-          previewTotal.textContent = `${newTotal} units`;
-          previewCost.classList.add("d-none");
-          preview.className = `alert ${
-            newTotal <= this.item.minStock ? "alert-danger" : "alert-warning"
-          }`;
-          preview.classList.remove("d-none");
+            previewChange.textContent = `-${qty} units`;
+            previewTotal.textContent = `${newTotal} units`;
+            preview.className = `alert ${
+              newTotal <= this.item.minStock ? "alert-danger" : "alert-warning"
+            }`;
+          }
         } else {
-          preview.classList.add("d-none");
+          preview.className = "d-none";
         }
       }
     };
@@ -281,6 +286,8 @@ export default class ManageStockModal extends BaseModal {
         updateMode();
       }
     });
+
+    updateMode();
   }
 
   static show(item, onStockIn, onStockOut) {
