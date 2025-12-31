@@ -48,12 +48,12 @@ export default class EditItemModal extends BaseModal {
           </div>
           
           <div class="mb-3">
-            <label for="productBarcode" class="form-label">Barcode</label>
+            <label for="productSku" class="form-label">SKU</label>
             <input 
               type="text" 
               class="form-control" 
-              id="productBarcode" 
-              value="${this.sanitizeHTML(this.item.barcode || "")}"
+              id="productSku" 
+              value="${this.sanitizeHTML(this.item.sku || "")}"
             >
           </div>
 
@@ -131,7 +131,7 @@ export default class EditItemModal extends BaseModal {
       const updatedItem = {
         name: this.modal.querySelector("#productName").value.trim(),
         category: this.modal.querySelector("#productCategory").value || null,
-        barcode: this.modal.querySelector("#productBarcode").value.trim(),
+        sku: this.modal.querySelector("#productSku").value.trim(),
         price: parseFloat(this.modal.querySelector("#productPrice").value) || 0,
         minStock:
           parseInt(this.modal.querySelector("#productMinStock").value) || 0,

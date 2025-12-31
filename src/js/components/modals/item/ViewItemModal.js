@@ -43,12 +43,12 @@ export default class ViewItemModal extends BaseModal {
                         </td>
                       </tr>
                       <tr>
-                        <td class="fw-semibold text-muted">Barcode:</td>
+                        <td class="fw-semibold text-muted">SKU:</td>
                         <td>
                           <code class="bg-body-secondary px-2 py-1 rounded">${this.sanitizeHTML(
-                            this.item.barcode,
+                            this.item.sku,
                           )}</code>
-                          <button id="copyBarcodeBtn" class="btn btn-sm btn-outline-secondary ms-2" title="Copy to clipboard">
+                          <button id="copySkuBtn" class="btn btn-sm btn-outline-secondary ms-2" title="Copy to clipboard">
                             <i class="bi bi-copy"></i>
                           </button>
                         </td>
@@ -159,17 +159,17 @@ export default class ViewItemModal extends BaseModal {
     //   });
     // }
 
-    const copyBtn = this.modal.querySelector("#copyBarcodeBtn");
+    const copyBtn = this.modal.querySelector("#copySkuBtn");
     if (copyBtn) {
       copyBtn.addEventListener("click", (e) => {
         e.preventDefault();
         navigator.clipboard
-          .writeText(this.item.barcode)
+          .writeText(this.item.sku)
           .then(() => {
-            toastManager.showSuccess("Barcode copied to clipboard!");
+            toastManager.showSuccess("SKU copied to clipboard!");
           })
           .catch(() => {
-            toastManager.showError("Failed to copy barcode.");
+            toastManager.showError("Failed to copy SKU.");
           });
       });
     }

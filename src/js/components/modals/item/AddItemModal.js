@@ -44,11 +44,11 @@ export default class AddItemModal extends BaseModal {
           </div>
           
           <div class="mb-3">
-            <label for="productBarcode" class="form-label">Barcode</label>
+            <label for="productSku" class="form-label">SKU</label>
             <input 
               type="text" 
               class="form-control" 
-              id="productBarcode"
+              id="productSku"
             >
           </div>
 
@@ -126,7 +126,7 @@ export default class AddItemModal extends BaseModal {
       const newItem = {
         name: this.modal.querySelector("#productName").value.trim(),
         category: this.modal.querySelector("#productCategory").value || null,
-        barcode: this.modal.querySelector("#productBarcode").value.trim(),
+        sku: this.modal.querySelector("#productSku").value.trim(),
         price: parseFloat(this.modal.querySelector("#productPrice").value) || 0,
         minStock:
           parseInt(this.modal.querySelector("#productMinStock").value) || 0,

@@ -12,23 +12,23 @@ class ItemsCollection extends BaseCollection {
     );
   }
 
-  getByBarcode(barcode) {
-    if (!barcode) return undefined;
-    return this.data.find((item) => item.barcode === barcode);
+  getBySku(sku) {
+    if (!sku) return undefined;
+    return this.data.find((item) => item.sku === sku);
   }
 
   nameExists(name) {
     return this.getByName(name) !== undefined;
   }
 
-  barcodeExists(barcode) {
-    if (!barcode) return false;
-    return this.getByBarcode(barcode) !== undefined;
+  SkuExists(sku) {
+    if (!sku) return false;
+    return this.getBySku(sku) !== undefined;
   }
 
   async addProduct(productData) {
     const trimmedName = productData.name.trim();
-    const trimmedBarcode = productData.barcode?.trim() || "";
+    const trimmedSku = productData.sku?.trim() || "";
 
     if (!trimmedName) {
       throw new Error("Product name cannot be empty.");
@@ -38,14 +38,14 @@ class ItemsCollection extends BaseCollection {
       throw new Error("Product name already exists.");
     }
 
-    if (trimmedBarcode && this.barcodeExists(trimmedBarcode)) {
-      throw new Error("Barcode already exists.");
+    if (trimmedSku && this.SkuExists(trimmedSku)) {
+      throw new Error("SKU already exists.");
     }
 
     const processedData = {
       ...productData,
       name: trimmedName,
-      barcode: trimmedBarcode,
+      sku: trimmedSku,
       price: parseFloat(productData.price) || 0,
       minStock: parseFloat(productData.minStock) || 5,
       createdAt: new Date().toISOString(),
@@ -68,15 +68,15 @@ class ItemsCollection extends BaseCollection {
       updates.name = trimmedName;
     }
 
-    if (updates.barcode !== undefined) {
-      const trimmedBarcode = updates.barcode?.trim() || "";
-      if (trimmedBarcode) {
-        const existing = this.getByBarcode(trimmedBarcode);
+    if (updates.sku !== undefined) {
+      const trimmedSku = updates.sku?.trim() || "";
+      if (trimmedSku) {
+        const existing = this.getBySku(trimmedSku);
         if (existing && existing.id !== id) {
-          throw new Error("Barcode already exists.");
+          throw new Error("SKU already exists.");
         }
       }
-      updates.barcode = trimmedBarcode;
+      updates.sku = trimmedSku;
     }
 
     const processedUpdates = {

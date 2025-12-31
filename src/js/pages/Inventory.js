@@ -270,7 +270,7 @@ export default function InventoryPage() {
     }));
 
     const formatters = {
-      1: (barcode) => `<code class="text-muted">${barcode}</code>`,
+      1: (sku) => `<code class="text-muted">${sku}</code>`,
       5: (status) =>
         `<span class="badge bg-${getStatusColor(status)}">${status}</span>`,
     };
@@ -325,7 +325,7 @@ export default function InventoryPage() {
         (item) =>
           item.name?.toLowerCase().includes(term) ||
           item.categoryName?.toLowerCase().includes(term) ||
-          item.barcode?.toLowerCase().includes(term),
+          item.sku?.toLowerCase().includes(term),
       );
     }
 
