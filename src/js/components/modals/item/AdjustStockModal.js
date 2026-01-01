@@ -1,19 +1,19 @@
 import BaseModal from "../BaseModal.js";
 
 export default class AdjustStockModal extends BaseModal {
-  constructor(item, onStockIn, onStockOut) {
+  constructor(item, stockBatches, onAdjust) {
     super({ size: "modal-dialog-centered" });
     this.item = item;
-    this.onStockIn = onStockIn;
-    this.onStockOut = onStockOut;
-    this.isStockIn = true;
+    this.stockBatches = stockBatches;
+    this.onAdjust = onAdjust;
+    this.isAddition = true;
   }
 
   getModalContent() {
     return `
       <div class="modal-header">
         <h5 class="modal-title">
-          <i class="bi bi-box-seam me-2"></i>Manage Stock
+          <i class="bi bi-box-seam me-2"></i>Adjust Stock
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
@@ -40,68 +40,38 @@ export default class AdjustStockModal extends BaseModal {
 
         <form id="stockForm" novalidate>
           <div class="btn-group w-100 mb-4" role="group">
-            <input type="radio" class="btn-check" name="stockDir" id="stockInRadio" value="in" checked>
-            <label class="btn btn-outline-success w-50" for="stockInRadio">
-              <i class="bi bi-plus-circle me-1"></i>Stock In
+            <input type="radio" class="btn-check" name="type" id="addRadio" value="add" checked>
+            <label class="btn btn-outline-success w-50" for="addRadio">
+              <i class="bi bi-plus-circle me-1"></i>Add
             </label>
-            <input type="radio" class="btn-check" name="stockDir" id="stockOutRadio" value="out">
-            <label class="btn btn-outline-danger w-50" for="stockOutRadio">
-              <i class="bi bi-dash-circle me-1"></i>Stock Out
+            <input type="radio" class="btn-check" name="type" id="subtractRadio" value="subtract">
+            <label class="btn btn-outline-danger w-50" for="subtractRadio">
+              <i class="bi bi-dash-circle me-1"></i>Subtract
             </label>
           </div>
 
-          <div id="positiveFields">
-            <div class="mb-3">
-              <label for="quantity" class="form-label">Quantity <span class="text-danger">*</span></label>
-              <input type="number" class="form-control" id="quantity" min="1" step="1" required>
-              <div class="invalid-feedback">Must be greater than 0</div>
-            </div>
-            <div class="mb-3">
-              <label for="cost" class="form-label">Unit Cost <span class="text-danger">*</span></label>
-              <div class="input-group">
-                <span class="input-group-text">₱</span>
-                <input type="number" class="form-control" id="cost" value="0" min="0" step="0.01" required>
-              </div>
-              <div class="invalid-feedback">Must be 0 or greater</div>
-            </div>
-            <div class="mb-3">
-              <label for="purchaseDate" class="form-label">Purchase Date <span class="text-danger">*</span></label>
-              <input type="date" class="form-control" id="purchaseDate" value="${
-                new Date().toISOString().split("T")[0]
-              }" max="${new Date().toISOString().split("T")[0]}" required>
-              <div class="invalid-feedback">Required</div>
-            </div>
+          <div class="mb-3">
+            <label for="quantity" class="form-label">Quantity <span class="text-danger">*</span></label>
+            <input type="number" class="form-control" id="quantity" min="1" step="1" required>
+            <div class="invalid-feedback" id="qtyError">Must be greater than 0</div>
           </div>
 
-          <div id="negativeFields" class="d-none">
-            <div class="mb-3">
-              <label for="negativeQty" class="form-label">Quantity <span class="text-danger">*</span></label>
-              <input type="number" class="form-control" id="negativeQty" min="1" max="${
-                this.item.totalStock || 0
-              }" step="1">
-              <div class="invalid-feedback">Must be between 1 and ${
-                this.item.totalStock || 0
-              }</div>
-            </div>
-            <div class="mb-3">
-              <label for="reason" class="form-label">Reason <span class="text-danger">*</span></label>
-              <select class="form-select" id="reason">
-                <option value="">Select reason...</option>
-                <option value="damaged">Damaged</option>
-                <option value="expired">Expired</option>
-                <option value="missing">Missing</option>
-                <option value="other">Other</option>
-              </select>
-              <div class="invalid-feedback">Please select a reason</div>
-            </div>
+          <div class="mb-3">
+            <label for="reason" class="form-label">Reason <span class="text-danger">*</span></label>
+            <select class="form-select" id="reason" required>
+              <option value="">Select reason...</option>
+              <option value="correction">Correction</option>
+              <option value="recovered">Recovered</option>
+              <option value="damaged">Damaged</option>
+              <option value="expired">Expired</option>
+              <option value="missing">Missing</option>
+              <option value="other">Other</option>
+            </select>
+            <div class="invalid-feedback">Please select a reason</div>
           </div>
 
-          <div id="preview" class="alert mt-3">
-            <div id="previewCost" class="d-flex justify-content-between mb-2">
-              <span class="fw-semibold">Total Cost:</span>
-              <span id="previewCostValue" class="fw-bold"></span>
-            </div>
-            <div class="d-flex justify-content-between">
+          <div id="preview">
+            <div class="d-flex justify-content-between mb-2">
               <span class="fw-semibold">Change:</span>
               <span id="previewChange" class="fw-bold"></span>
             </div>
@@ -114,7 +84,9 @@ export default class AdjustStockModal extends BaseModal {
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="submit" form="stockForm" id="submitBtn"></button>
+        <button type="submit" form="stockForm" class="btn btn-success" id="submitBtn">
+          <i class="bi bi-check-lg me-2"></i>Adjust Stock
+        </button>
       </div>
     `;
   }
@@ -122,175 +94,144 @@ export default class AdjustStockModal extends BaseModal {
   attachEventListeners() {
     const form = this.modal.querySelector("#stockForm");
     const submitBtn = this.modal.querySelector("#submitBtn");
-    const stockInRadio = this.modal.querySelector("#stockInRadio");
-    const stockOutRadio = this.modal.querySelector("#stockOutRadio");
-    const positiveFields = this.modal.querySelector("#positiveFields");
-    const negativeFields = this.modal.querySelector("#negativeFields");
+    const qtyInput = this.modal.querySelector("#quantity");
+    const reasonSelect = this.modal.querySelector("#reason");
     const preview = this.modal.querySelector("#preview");
     const previewChange = this.modal.querySelector("#previewChange");
     const previewTotal = this.modal.querySelector("#previewTotal");
-    const previewCost = this.modal.querySelector("#previewCost");
-    const previewCostValue = this.modal.querySelector("#previewCostValue");
+    const qtyError = this.modal.querySelector("#qtyError");
 
-    const qtyInput = this.modal.querySelector("#quantity");
-    const costInput = this.modal.querySelector("#cost");
-    const negativeQtyInput = this.modal.querySelector("#negativeQty");
+    const reasonOptions = {
+      add: ["correction", "recovered", "other"],
+      subtract: ["damaged", "expired", "missing", "other"],
+    };
 
     const updateMode = () => {
-      const checkedStockDir = this.modal.querySelector(
-        'input[name="stockDir"]:checked',
-      );
-      if (!checkedStockDir) return;
+      const checked = this.modal.querySelector('input[name="type"]:checked');
+      this.isAddition = checked?.value === "add";
 
-      this.isStockIn = checkedStockDir.value === "in";
+      const options = reasonOptions[this.isAddition ? "add" : "subtract"];
+      reasonSelect.innerHTML =
+        '<option value="">Select reason...</option>' +
+        options
+          .map((v) => {
+            const labels = {
+              correction: "Correction",
+              recovered: "Recovered",
+              damaged: "Damaged",
+              expired: "Expired",
+              missing: "Missing",
+              other: "Other",
+            };
+            return `<option value="${v}">${labels[v]}</option>`;
+          })
+          .join("");
 
-      if (this.isStockIn === true) {
-        positiveFields.classList.remove("d-none");
-        negativeFields.classList.add("d-none");
+      // Update button appearance
+      if (this.isAddition) {
         submitBtn.className = "btn btn-success";
-        submitBtn.innerHTML = "Add Stock";
+        submitBtn.innerHTML = '<i class="bi bi-plus-circle me-2"></i>Add Stock';
       } else {
-        positiveFields.classList.add("d-none");
-        negativeFields.classList.remove("d-none");
         submitBtn.className = "btn btn-danger";
-        submitBtn.innerHTML = "Reduce Stock";
+        submitBtn.innerHTML =
+          '<i class="bi bi-dash-circle me-2"></i>Subtract Stock';
       }
+
+      qtyInput.classList.remove("is-invalid");
+      reasonSelect.classList.remove("is-invalid");
       updatePreview();
     };
 
     const updatePreview = () => {
+      const qty = parseInt(qtyInput.value) || 0;
       const current = this.item.totalStock || 0;
 
-      // Stock in
-      if (this.isStockIn === true) {
-        previewCost.classList.remove("d-none");
-        const qty = parseInt(qtyInput.value) || 0;
-        const cost = parseFloat(costInput.value) || 0;
-
-        if (qty > 0 && cost >= 0) {
+      if (this.isAddition) {
+        // Adding stock
+        preview.className = "alert alert-success";
+        if (this.stockBatches.length === 0) {
+          previewChange.textContent = "";
+          previewTotal.textContent = "No purchase orders available";
+        } else {
           const newTotal = current + qty;
-          const totalCost = qty * cost;
-
-          previewCostValue.textContent = `₱${totalCost.toFixed(2)}`;
-
           previewChange.textContent = `+${qty} units`;
           previewTotal.textContent = `${newTotal} units`;
-          preview.className = "alert alert-success";
-        } else {
-          preview.className = "d-none";
         }
-
-        // Stock out
       } else {
-        previewCost.classList.add("d-none");
-        const qty = parseInt(negativeQtyInput.value) || 0;
-
-        if (qty > 0) {
-          if (qty > current) {
-            previewChange.textContent = `-${qty} units`;
-            previewTotal.textContent = `Quantity exceeds current stock`;
-            preview.className = "alert alert-danger";
-          } else {
-            const newTotal = current - qty;
-
-            previewChange.textContent = `-${qty} units`;
-            previewTotal.textContent = `${newTotal} units`;
-            preview.className = `alert ${
-              newTotal <= this.item.minStock ? "alert-danger" : "alert-warning"
-            }`;
-          }
+        // Subtracting stock
+        preview.className = "alert alert-danger";
+        if (current === 0 || qty > current) {
+          previewChange.textContent = "";
+          previewTotal.textContent = "Exceeds current stock";
         } else {
-          preview.className = "d-none";
+          const newTotal = current - qty;
+          qtyError.textContent = "Must be greater than 0";
+          previewChange.textContent = `-${qty} units`;
+          previewTotal.textContent = `${newTotal} units`;
         }
       }
     };
 
-    stockInRadio.addEventListener("change", updateMode);
-    stockOutRadio.addEventListener("change", updateMode);
-    qtyInput?.addEventListener("input", updatePreview);
-    costInput?.addEventListener("input", updatePreview);
-    negativeQtyInput?.addEventListener("input", updatePreview);
-
-    const validateForm = () => {
-      let isValid = true;
-
-      if (this.isStockIn === true) {
-        const qty = parseInt(qtyInput.value) || 0;
-        const cost = parseFloat(costInput.value);
-        const date = this.modal.querySelector("#purchaseDate").value;
-
-        [qtyInput, costInput].forEach((input) =>
-          input.classList.remove("is-invalid"),
-        );
-
-        if (qty < 1) {
-          qtyInput.classList.add("is-invalid");
-          isValid = false;
-        }
-        if (cost === undefined || cost < 0) {
-          costInput.classList.add("is-invalid");
-          isValid = false;
-        }
-        if (!date) {
-          this.modal.querySelector("#purchaseDate").classList.add("is-invalid");
-          isValid = false;
-        }
-      } else {
-        const qty = parseInt(negativeQtyInput.value) || 0;
-        const reason = this.modal.querySelector("#reason").value;
-
-        [negativeQtyInput, this.modal.querySelector("#reason")].forEach(
-          (input) => input.classList.remove("is-invalid"),
-        );
-
-        if (qty < 1 || qty > (this.item.totalStock || 0)) {
-          negativeQtyInput.classList.add("is-invalid");
-          isValid = false;
-        }
-        if (!reason) {
-          this.modal.querySelector("#reason").classList.add("is-invalid");
-          isValid = false;
-        }
-      }
-
-      return isValid;
-    };
+    this.modal
+      .querySelectorAll('input[name="type"]')
+      .forEach((r) => r.addEventListener("change", updateMode));
+    qtyInput.addEventListener("input", updatePreview);
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      if (!validateForm()) return;
 
-      const loadingMsg = this.isStockIn
-        ? "Adding stock..."
-        : "Reducing stock...";
-      this.setLoading(submitBtn, true, loadingMsg, submitBtn.innerHTML);
+      const qty = parseInt(qtyInput.value) || 0;
+      const reason = reasonSelect.value;
+      const current = this.item.totalStock || 0;
+
+      qtyInput.classList.remove("is-invalid");
+      reasonSelect.classList.remove("is-invalid");
+
+      let isValid = true;
+
+      if (qty < 1) {
+        isValid = false;
+        qtyInput.classList.add("is-invalid");
+        qtyError.textContent = "Must be greater than 0";
+      } else if (this.isAddition) {
+        if (this.stockBatches.length === 0) {
+          isValid = false;
+          qtyInput.classList.add("is-invalid");
+          qtyError.textContent =
+            "Cannot add stock without existing purchase orders";
+        }
+      } else {
+        if (qty > current) {
+          isValid = false;
+          qtyInput.classList.add("is-invalid");
+          qtyError.textContent = `Cannot exceed current stock of ${current} units`;
+        }
+      }
+
+      if (!reason) {
+        isValid = false;
+        reasonSelect.classList.add("is-invalid");
+      }
+
+      if (!isValid) return;
+
+      this.setLoading(submitBtn, true, "Adjusting...", submitBtn.innerHTML);
 
       try {
-        if (this.isStockIn === true) {
-          await this.onStockIn(
-            this.item,
-            parseFloat(qtyInput.value),
-            parseFloat(costInput.value),
-            new Date(this.modal.querySelector("#purchaseDate").value),
-          );
-        } else {
-          await this.onStockOut(
-            this.item,
-            parseFloat(negativeQtyInput.value),
-            this.modal.querySelector("#reason").value,
-          );
-        }
+        await this.onAdjust(this.item, this.isAddition ? qty : -qty, reason);
         this.hide();
       } catch (error) {
-        this.setLoading(submitBtn, false, "", submitBtn.innerHTML);
-        updateMode();
+        const originalBtn = this.isAddition
+          ? '<i class="bi bi-plus-circle me-2"></i>Add Stock'
+          : '<i class="bi bi-dash-circle me-2"></i>Subtract Stock';
+        this.setLoading(submitBtn, false, "", originalBtn);
       }
     });
 
     updateMode();
   }
 
-  static show(item, onStockIn, onStockOut) {
-    return new AdjustStockModal(item, onStockIn, onStockOut).create().show();
+  static show(item, stockBatches, onAdjust) {
+    return new AdjustStockModal(item, stockBatches, onAdjust).create().show();
   }
 }

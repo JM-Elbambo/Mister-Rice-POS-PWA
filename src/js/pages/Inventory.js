@@ -421,21 +421,16 @@ export default function InventoryPage() {
   }
 
   async function showAdjustStockModal(item) {
+    const stockBatches = dataStore.stocks.getAvailableByItem(item.id);
     AdjustStockModal.show(
       item,
-      handleModalAction(
-        (item, quantity, cost, purchaseDate) =>
-          dataStore.stocks.addStock(item.id, quantity, cost, purchaseDate),
-        (item, quantity, cost, purchaseDate) =>
-          `Added ${quantity} units to ${item.name}.`,
-        "Failed to add stock.",
-      ),
+      stockBatches,
       handleModalAction(
         (item, quantity, reason) =>
-          dataStore.stocks.reduceStock(item.id, quantity, reason),
+          dataStore.stocks.adjustStock(item.id, quantity, reason),
         (item, quantity, reason) =>
-          `Reduced ${quantity} units from ${item.name}.`,
-        "Failed to reduce stock.",
+          `Adjusted ${item.name} by ${quantity > 0 ? "+" : ""}${quantity} units.`,
+        "Failed to adjust stock.",
       ),
     );
   }
