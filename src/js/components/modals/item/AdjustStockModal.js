@@ -1,6 +1,6 @@
 import BaseModal from "../BaseModal.js";
 
-export default class ManageStockModal extends BaseModal {
+export default class AdjustStockModal extends BaseModal {
   constructor(item, onStockIn, onStockOut) {
     super({ size: "modal-dialog-centered" });
     this.item = item;
@@ -291,6 +291,6 @@ export default class ManageStockModal extends BaseModal {
   }
 
   static show(item, onStockIn, onStockOut) {
-    return new ManageStockModal(item, onStockIn, onStockOut).create().show();
+    return new AdjustStockModal(item, onStockIn, onStockOut).create().show();
   }
 }

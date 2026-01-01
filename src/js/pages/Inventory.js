@@ -7,7 +7,7 @@ import CategoriesModal from "../components/modals/CategoriesModal.js";
 import AddItemModal from "../components/modals/item/AddItemModal.js";
 import ViewItemModal from "../components/modals/item/ViewItemModal.js";
 import EditItemModal from "../components/modals/item/EditItemModal.js";
-import ManageStockModal from "../components/modals/item/ManageStockModal.js";
+import AdjustStockModal from "../components/modals/item/AdjustStockModal.js";
 import toastManager from "../components/ToastManager.js";
 
 export default function InventoryPage() {
@@ -38,26 +38,19 @@ export default function InventoryPage() {
   let initialized = false;
 
   const itemsPerPage = 10;
-  const headers = [
-    "Product Name",
-    "Category",
-    "Price",
-    "Stock",
-    "Min Stock",
-    "Status",
-  ];
+  const headers = ["Product Name", "Category", "Price", "Stock", "Status"];
   const actions = [
     {
-      label: "View",
+      label: "View Details",
       onClick: showViewItemModal,
     },
     {
-      label: "Edit",
+      label: "Edit Product",
       onClick: showEditItemModal,
     },
     {
-      label: "Stock",
-      onClick: showManageStockModal,
+      label: "Adjust Stock",
+      onClick: showAdjustStockModal,
     },
   ];
 
@@ -263,7 +256,6 @@ export default function InventoryPage() {
         item.categoryName,
         `₱${parseFloat(item.price || 0).toFixed(2)}`,
         item.totalStock,
-        item.minStock,
         getStatus(item),
       ],
       original: item,
@@ -271,7 +263,7 @@ export default function InventoryPage() {
 
     const formatters = {
       1: (sku) => `<code class="text-muted">${sku}</code>`,
-      5: (status) =>
+      4: (status) =>
         `<span class="badge bg-${getStatusColor(status)}">${status}</span>`,
     };
 
@@ -406,7 +398,13 @@ export default function InventoryPage() {
   }
 
   async function showViewItemModal(item) {
-    ViewItemModal.show(item, showEditItemModal, showManageStockModal);
+    const stockBatches = dataStore.stocks.getAvailableByItem(item.id);
+    ViewItemModal.show(
+      item,
+      stockBatches,
+      showEditItemModal,
+      showAdjustStockModal,
+    );
   }
 
   async function showEditItemModal(item) {
@@ -422,8 +420,8 @@ export default function InventoryPage() {
     );
   }
 
-  async function showManageStockModal(item) {
-    ManageStockModal.show(
+  async function showAdjustStockModal(item) {
+    AdjustStockModal.show(
       item,
       handleModalAction(
         (item, quantity, cost, purchaseDate) =>
