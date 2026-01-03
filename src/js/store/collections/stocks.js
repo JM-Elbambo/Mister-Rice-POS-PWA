@@ -1,12 +1,5 @@
 import { BaseCollection } from "./baseCollection.js";
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  updateDoc,
-  doc,
-} from "firebase/firestore";
+import { collection, query, where, updateDoc, doc } from "firebase/firestore";
 import { db } from "../../firebase.js";
 
 class StocksCollection extends BaseCollection {
@@ -15,31 +8,40 @@ class StocksCollection extends BaseCollection {
 
     this.query = query(
       collection(db, this.collectionName),
-      where("remaining", ">", 0),
+      where("remainingQty", ">", 0),
     );
     this.itemTotals = new Map();
   }
 
   processData(rawData) {
-    this.data = rawData;
+    this.data = rawData.sort(
+      (a, b) => new Date(a.purchaseDate) - new Date(b.purchaseDate),
+    );
     this.itemTotals = new Map();
 
     for (const stock of this.data) {
       if (!stock.itemId) continue;
-
       const current = this.itemTotals.get(stock.itemId) ?? 0;
-      this.itemTotals.set(stock.itemId, current + (stock.remaining ?? 0));
+      this.itemTotals.set(stock.itemId, current + (stock.remainingQty ?? 0));
     }
   }
 
-  async addStock(itemId, quantity, cost, purchaseDate = new Date()) {
+  async addStockFromPo({
+    itemId,
+    poId,
+    qty,
+    unitCost,
+    purchaseDate,
+    supplier,
+  }) {
     const stockData = {
       itemId,
-      quantity: parseFloat(quantity),
-      remaining: parseFloat(quantity),
-      cost: parseFloat(cost),
-      purchaseDate: purchaseDate.toISOString(),
-      createdAt: new Date().toISOString(),
+      poId,
+      receivedQty: parseFloat(qty),
+      remainingQty: parseFloat(qty),
+      unitCost: parseFloat(unitCost),
+      purchaseDate,
+      supplier,
     };
 
     return await this.add(stockData);
@@ -136,9 +138,7 @@ class StocksCollection extends BaseCollection {
   }
 
   getAvailableByItem(itemId) {
-    return this.data
-      .filter((s) => s.itemId === itemId)
-      .sort((a, b) => new Date(a.purchaseDate) - new Date(b.purchaseDate));
+    return this.data.filter((s) => s.itemId === itemId);
   }
 }
 
