@@ -89,7 +89,7 @@ class ItemsCollection extends BaseCollection {
         updates.minStock !== undefined
           ? parseFloat(updates.minStock) || 5
           : undefined,
-      lastUpdated: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
     await this.update(id, processedUpdates);
