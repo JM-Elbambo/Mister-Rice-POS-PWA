@@ -1,5 +1,6 @@
 import { dataStore } from "../store/index.js";
 import toastManager from "../components/ToastManager.js";
+import { Timestamp } from "firebase/firestore";
 
 export default function PurchaseOrderPage() {
   const main = document.createElement("main");
@@ -319,7 +320,7 @@ export default function PurchaseOrderPage() {
 
       try {
         const poId = `PO-${Date.now()}`;
-        const timestamp = new Date(purchaseDate);
+        const timestamp = Timestamp.fromDate(new Date(purchaseDate));
 
         await Promise.all(
           cart.map((item) =>
@@ -328,7 +329,7 @@ export default function PurchaseOrderPage() {
               poId,
               qty: item.quantity,
               unitCost: item.unitCost,
-              purchaseDate: timestamp.toISOString(),
+              purchaseDate: timestamp,
               supplier,
             }),
           ),

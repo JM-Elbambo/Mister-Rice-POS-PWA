@@ -131,10 +131,6 @@ export default class BaseModal {
     // To be implemented by child classes if needed
   }
 
-  formatCurrency(amount) {
-    return parseFloat(amount || 0).toFixed(2);
-  }
-
   sanitizeHTML(str) {
     const div = document.createElement("div");
     div.textContent = str;

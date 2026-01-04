@@ -1,5 +1,6 @@
 import toastManager from "../../ToastManager.js";
 import BaseModal from "../BaseModal.js";
+import { formatCurrency, timestampToDateString } from "../../../utils.js";
 
 export default class ViewItemModal extends BaseModal {
   constructor(item, stockBatches, onEdit, onAdjustStock) {
@@ -55,65 +56,69 @@ export default class ViewItemModal extends BaseModal {
   getInfoTab() {
     return `
       <div data-tab-content="info">
-        <table class="table table-borderless">
-          <tbody>
-            <tr>
-              <td class="text-muted" style="width: 140px;">Product Name</td>
-              <td class="fw-semibold">${this.sanitizeHTML(this.item.name)}</td>
-            </tr>
-            <tr>
-              <td class="text-muted">SKU</td>
-              <td>
-                <code class="bg-body-secondary px-2 py-1 rounded">${this.sanitizeHTML(this.item.sku || "N/A")}</code>
-                ${this.item.sku ? '<button id="copySkuBtn" class="btn btn-sm btn-outline-secondary ms-2"><i class="bi bi-copy"></i></button>' : ""}
-              </td>
-            </tr>
-            <tr>
-              <td class="text-muted">Category</td>
-              <td>
-                <span class="badge bg-secondary">
-                  <i class="bi bi-tag me-1"></i>${this.sanitizeHTML(this.item.categoryName || "Uncategorized")}
-                </span>
-              </td>
-            </tr>
-            <tr>
-              <td class="text-muted">Selling Price</td>
-              <td class="fs-5 text-success fw-semibold">₱${this.formatCurrency(this.item.price)}</td>
-            </tr>
-            <tr>
-              <td class="text-muted">Min. Stock Level</td>
-              <td>${this.item.minStock} <small class="text-muted">units</small></td>
-            </tr>
-          </tbody>
-        </table>
-        
-        <div class="d-grid">
-          <button type="button" class="btn btn-outline-primary" id="editBtn">
-            <i class="bi bi-pencil me-2"></i>Edit Product
-          </button>
+
+        <div class="container-fluid mb-3">
+
+          <div class="row mb-2">
+            <div class="col-lg-3 col-5 text-muted">SKU</div>
+            <div class="col">
+              <code class="bg-body-secondary px-2 py-1 rounded">
+                ${this.sanitizeHTML(this.item.sku || "N/A")}
+              </code>
+              ${this.item.sku ? '<button id="copySkuBtn" class="btn btn-sm btn-outline-secondary ms-2"><i class="bi bi-copy"></i></button>' : ""}
+            </div>
+          </div>
+
+          <div class="row mb-2">
+            <div class="col-lg-3 col-5 text-muted">Category</div>
+            <div class="col">
+              <span class="badge bg-secondary">
+                <i class="bi bi-tag me-1"></i>${this.sanitizeHTML(this.item.categoryName || "Uncategorized")}
+              </span>
+            </div>
+          </div>
+
+          <div class="row mb-2">
+            <div class="col-lg-3 col-5 text-muted">Min. Stock Level</div>
+            <div class="col">
+              <span class="fw-semibold">${this.item.minStock}</span> <small>unit(s)</small>
+            </div>
+          </div>
+
+          <div class="row mb-2">
+            <div class="col-lg-3 col-5 text-muted">Selling Price</div>
+            <div class="col fw-semibold">
+              ₱${formatCurrency(this.item.price)}
+            </div>
+          </div>
+
         </div>
+        
+        <button type="button" class="btn btn-outline-primary w-100" id="editBtn">
+          <i class="bi bi-pencil me-2"></i>Edit Product
+        </button>
       </div>
     `;
   }
 
   getStockTab() {
     const avgCost = this.calculateAvgCost();
-    const stockValue = this.item.totalStock * avgCost;
+    const stockCost = this.item.totalStock * avgCost;
     const status = this.getStatus();
 
     return `
       <div class="d-none" data-tab-content="stock">
-        <div class="row g-3 mb-4 justify-content-center">
-          <div class="col-md-5">
-            <div class="text-center p-4 bg-body-secondary rounded h-100 d-flex flex-column justify-content-center">
-              <div class="text-muted small mb-2">Total Stock</div>
+        <div class="row g-3 mb-3 justify-content-center">
+          <div class="col-lg-4 col-6">
+            <div class="text-center p-3 bg-body-secondary rounded h-100 d-flex flex-column justify-content-center">
+              <div class="text-muted small mb-1">Total Stock</div>
               <div class="h2 mb-0">${this.item.totalStock}</div>
-              <small class="text-muted">units</small>
+              <small class="text-muted">unit(s)</small>
             </div>
           </div>
-          <div class="col-md-5">
-            <div class="text-center p-4 bg-body-secondary rounded h-100 d-flex flex-column justify-content-center">
-              <div class="text-muted small mb-2">Status</div>
+          <div class="col-lg-4 col-6">
+            <div class="text-center p-3 bg-body-secondary rounded h-100 d-flex flex-column justify-content-center">
+              <div class="text-muted small mb-1">Status</div>
               <span class="badge bg-${status.color} fs-6">
                 <i class="bi ${status.icon} me-1"></i>${status.label}
               </span>
@@ -121,24 +126,26 @@ export default class ViewItemModal extends BaseModal {
           </div>
         </div>
 
-        <table class="table table-borderless">
-          <tbody>
-            <tr>
-              <td class="text-muted" style="width: 160px;">Avg. Unit Cost</td>
-              <td class="fw-semibold">₱${this.formatCurrency(avgCost)}</td>
-            </tr>
-            <tr>
-              <td class="text-muted">Total Stock Value</td>
-              <td class="fs-5 text-primary fw-semibold">₱${this.formatCurrency(stockValue)}</td>
-            </tr>
-            <tr>
-              <td class="text-muted">Active Purchase Orders</td>
-              <td>${this.stockBatches.length} <small class="text-muted">PO${this.stockBatches.length !== 1 ? "s" : ""}</small></td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="container-fluid mb-3">
+          <div class="row mb-2">
+            <div class="col-lg-3 col-5 text-muted">Active Purchase Orders</div>
+            <div class="col">
+              <span class="fw-semibold">${this.stockBatches.length}</span> <small>PO(s)</small>
+            </div>
+          </div>
 
-        <button class="btn btn-outline-primary w-100 mt-3" id="adjustStockBtn">
+          <div class="row mb-2">
+            <div class="col-lg-3 col-5 text-muted">Avg. Unit Cost</div>
+            <div class="col fw-semibold">₱${formatCurrency(avgCost)}</div>
+          </div>
+
+          <div class="row mb-2">
+            <div class="col-lg-3 col-5 text-muted">Total Stock Cost</div>
+            <div class="col fw-semibold">₱${formatCurrency(stockCost)}</div>
+          </div>
+        </div>
+
+        <button class="btn btn-outline-primary w-100" id="adjustStockBtn">
           <i class="bi bi-box-seam me-2"></i>Adjust Stock
         </button>
       </div>
@@ -152,10 +159,11 @@ export default class ViewItemModal extends BaseModal {
           <table class="table table-sm table-hover">
             <thead class="table-light">
               <tr>
-                <th>PO Number</th>
-                <th class="text-end">Qty Remaining</th>
+                <th>Id</th>
+                <th class="text-end">Remaining Qty</th>
+                <th class="text-end">Received Qty</th>
                 <th class="text-end">Unit Cost</th>
-                <th>Date Received</th>
+                <th class="text-end">Purchase Date</th>
               </tr>
             </thead>
             <tbody>
@@ -163,10 +171,11 @@ export default class ViewItemModal extends BaseModal {
                 .map(
                   (batch) => `
                 <tr>
-                  <td><code class="text-muted">${batch.id.slice(0, 8)}</code></td>
-                  <td class="text-end">${batch.remaining}</td>
-                  <td class="text-end">₱${this.formatCurrency(batch.cost)}</td>
-                  <td>${new Date(batch.purchaseDate).toLocaleDateString()}</td>
+                  <td><code class="text-muted">${batch.poId}</code></td>
+                  <td class="text-end">${batch.remainingQty}</td>
+                  <td class="text-end">${batch.receivedQty}</td>
+                  <td class="text-end">₱${formatCurrency(batch.unitCost)}</td>
+                  <td class="text-end">${timestampToDateString(batch.purchaseDate)}</td>
                 </tr>
               `,
                 )
@@ -188,11 +197,11 @@ export default class ViewItemModal extends BaseModal {
     if (!this.stockBatches.length) return 0;
 
     const totalCost = this.stockBatches.reduce(
-      (sum, batch) => sum + batch.remaining * batch.cost,
+      (sum, batch) => sum + batch.remainingQty * batch.unitCost,
       0,
     );
     const totalQty = this.stockBatches.reduce(
-      (sum, batch) => sum + batch.remaining,
+      (sum, batch) => sum + batch.remainingQty,
       0,
     );
 
