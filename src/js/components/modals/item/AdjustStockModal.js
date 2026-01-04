@@ -1,4 +1,4 @@
-import BaseModal from "../BaseModal.js";
+import BaseModal from "../../BaseModal.js";
 
 export default class AdjustStockModal extends BaseModal {
   constructor(item, stockBatches, onAdjust) {

@@ -1,5 +1,5 @@
 import toastManager from "../../ToastManager.js";
-import BaseModal from "../BaseModal.js";
+import BaseModal from "../../BaseModal.js";
 import { formatCurrency, timestampToDateString } from "../../../utils.js";
 
 export default class ViewItemModal extends BaseModal {

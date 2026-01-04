@@ -1,4 +1,4 @@
-import BaseModal from "../BaseModal.js";
+import BaseModal from "../../BaseModal.js";
 
 export default class EditItemModal extends BaseModal {
   constructor(item, categories, onSave) {

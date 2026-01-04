@@ -1,4 +1,4 @@
-import BaseModal from "./BaseModal.js";
+import BaseModal from "../BaseModal.js";
 
 export default class CategoriesModal extends BaseModal {
   constructor(onCreate, onUpdate, onDelete, onRefresh) {
