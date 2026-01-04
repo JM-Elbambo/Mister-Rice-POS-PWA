@@ -26,14 +26,7 @@ class StocksCollection extends BaseCollection {
     }
   }
 
-  async addStockFromPo({
-    itemId,
-    poId,
-    qty,
-    unitCost,
-    purchaseDate,
-    supplier,
-  }) {
+  async addStockByPo({ itemId, poId, qty, unitCost, purchaseDate, supplier }) {
     const stockData = {
       itemId,
       poId,
@@ -49,13 +42,13 @@ class StocksCollection extends BaseCollection {
 
   async adjustStock(itemId, quantity, reason) {
     if (quantity > 0) {
-      return await this.addToExistingBatches(itemId, quantity);
+      return await this.addStock(itemId, quantity);
     } else {
-      return await this.reduceStock(itemId, Math.abs(quantity), reason);
+      return await this.reduceStock(itemId, Math.abs(quantity));
     }
   }
 
-  async addToExistingBatches(itemId, quantityToAdd) {
+  async addStock(itemId, quantityToAdd) {
     const batches = this.getAvailableByItem(itemId).sort(
       (a, b) => new Date(b.purchaseDate) - new Date(a.purchaseDate),
     ); // Latest first
@@ -64,36 +57,36 @@ class StocksCollection extends BaseCollection {
       throw new Error("No existing batches found. Cannot add stock.");
     }
 
-    let remaining = quantityToAdd;
+    let remainingToAdd = quantityToAdd;
     const updates = [];
 
     for (const batch of batches) {
-      if (remaining <= 0) break;
+      if (remainingToAdd <= 0) break;
 
-      const capacity = batch.quantity - batch.remaining;
+      const capacity = batch.receivedQty - batch.remainingQty;
       if (capacity <= 0) continue; // Skip full batches
 
-      const toAdd = Math.min(capacity, remaining);
-      const newRemaining = batch.remaining + toAdd;
+      const toAdd = Math.min(capacity, remainingToAdd);
+      const newRemaining = batch.remainingQty + toAdd;
 
       updates.push({
         id: batch.id,
-        remaining: newRemaining,
+        remainingQty: newRemaining,
       });
 
-      remaining -= toAdd;
+      remainingToAdd -= toAdd;
     }
 
-    if (remaining > 0) {
+    if (remainingToAdd > 0) {
       throw new Error(
-        `Cannot add ${remaining} units. All batches are at full capacity.`,
+        `Cannot add ${remainingToAdd} units. All batches are at full capacity.`,
       );
     }
 
     await Promise.all(
       updates.map((u) =>
         updateDoc(doc(db, this.collectionName, u.id), {
-          remaining: u.remaining,
+          remainingQty: u.remainingQty,
           lastUpdated: new Date().toISOString(),
         }),
       ),
@@ -102,33 +95,33 @@ class StocksCollection extends BaseCollection {
     return updates;
   }
 
-  async reduceStock(itemId, quantityToReduce, reason) {
+  async reduceStock(itemId, quantityToReduce) {
     const stocks = this.getAvailableByItem(itemId);
-    let remaining = quantityToReduce;
+    let remainingToReduce = quantityToReduce;
     const updates = [];
 
     for (const stock of stocks) {
-      if (remaining <= 0) break;
+      if (remainingToReduce <= 0) break;
 
-      const toDeduct = Math.min(stock.remaining, remaining);
-      const newRemaining = stock.remaining - toDeduct;
+      const toDeduct = Math.min(stock.remainingQty, remainingToReduce);
+      const newRemaining = stock.remainingQty - toDeduct;
 
       updates.push({
         id: stock.id,
-        remaining: newRemaining,
+        remainingQty: newRemaining,
       });
 
-      remaining -= toDeduct;
+      remainingToReduce -= toDeduct;
     }
 
-    if (remaining > 0) {
+    if (remainingToReduce > 0) {
       throw new Error("Insufficient stock to reduce");
     }
 
     await Promise.all(
       updates.map((u) =>
         updateDoc(doc(db, this.collectionName, u.id), {
-          remaining: u.remaining,
+          remainingQty: u.remainingQty,
           lastUpdated: new Date().toISOString(),
         }),
       ),

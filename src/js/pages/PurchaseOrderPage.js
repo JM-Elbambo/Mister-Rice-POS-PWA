@@ -340,7 +340,7 @@ class PurchaseOrder extends BasePage {
 
       await Promise.all(
         this.cart.map((item) =>
-          dataStore.stocks.addStockFromPo({
+          dataStore.stocks.addStockByPo({
             itemId: item.itemId,
             poId,
             qty: item.quantity,
