@@ -49,7 +49,7 @@ class Inventory extends BasePage {
     }
   }
 
-  update() {
+  update(skipFilters = false) {
     if (!this.initialized) return;
 
     const items = dataStore.items.data.map((item) => ({
@@ -59,22 +59,25 @@ class Inventory extends BasePage {
     }));
 
     this.filteredData = this.applyFilters(items, this.filters);
-    this.render();
+    this.render(skipFilters);
   }
 
-  render() {
-    this.container.innerHTML = "";
-    this.container.append(
-      this.statsEl,
-      this.btnsEl,
-      this.filtersEl,
-      this.tableEl,
-      this.paginationEl,
-    );
+  render(skipFilters = false) {
+    // Only append containers on first render
+    if (!this.container.contains(this.statsEl)) {
+      this.container.innerHTML = "";
+      this.container.append(
+        this.statsEl,
+        this.btnsEl,
+        this.filtersEl,
+        this.tableEl,
+        this.paginationEl,
+      );
+    }
 
     this.renderStats();
     this.renderButtons();
-    this.renderFilters();
+    if (!skipFilters) this.renderFilters();
     this.renderTable();
     this.renderPagination();
   }
@@ -171,7 +174,7 @@ class Inventory extends BasePage {
         onFilter: (f) => {
           this.filters = f;
           this.page = 1;
-          this.update();
+          this.update(true); // Skip filter re-render
         },
         initialValues: this.filters,
       }),
