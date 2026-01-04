@@ -1,3 +1,4 @@
+import BasePage from "../components/BasePage.js";
 import { dataStore } from "../store/index.js";
 import QuickStats from "../components/QuickStats.js";
 import Table from "../components/Table.js";
@@ -8,220 +9,147 @@ import AddItemModal from "../components/modals/item/AddItemModal.js";
 import ViewItemModal from "../components/modals/item/ViewItemModal.js";
 import EditItemModal from "../components/modals/item/EditItemModal.js";
 import AdjustStockModal from "../components/modals/item/AdjustStockModal.js";
-import toastManager from "../components/ToastManager.js";
 
 export default function InventoryPage() {
-  const main = document.createElement("main");
-  main.className = "container mb-4";
+  const page = new Inventory();
+  return page.getElement();
+}
 
-  const statsContainer = document.createElement("div");
-  const headerButtonsContainer = document.createElement("div");
-  headerButtonsContainer.className = "d-flex justify-content-end mb-3";
-  const filtersContainer = document.createElement("div");
-  const tableContainer = document.createElement("div");
-  const paginationContainer = document.createElement("div");
-  paginationContainer.className =
-    "d-flex justify-content-between align-items-center mt-3";
+class Inventory extends BasePage {
+  constructor() {
+    super();
+    this.filteredData = [];
+    this.filters = { search: "", filters: {}, sort: "name" };
+    this.page = 1;
+    this.perPage = 10;
 
-  main.appendChild(statsContainer);
-  main.appendChild(headerButtonsContainer);
-  main.appendChild(filtersContainer);
-  main.appendChild(tableContainer);
-  main.appendChild(paginationContainer);
+    this.statsEl = document.createElement("div");
+    this.btnsEl = document.createElement("div");
+    this.btnsEl.className = "d-flex justify-content-end mb-3";
+    this.filtersEl = document.createElement("div");
+    this.tableEl = document.createElement("div");
+    this.paginationEl = document.createElement("div");
+    this.paginationEl.className =
+      "d-flex justify-content-between align-items-center mt-3";
 
-  let filteredData = [];
-  let appliedFilters = { search: "", filters: {}, sort: "name" };
-  let currentPage = 1;
-  let unsubscribeItems = null;
-  let unsubscribeCategories = null;
-  let unsubscribeStocks = null;
-  let initialized = false;
+    this.init();
+  }
 
-  const itemsPerPage = 10;
-  const headers = ["Product Name", "Category", "Price", "Stock", "Status"];
-  const actions = [
-    {
-      label: "View Details",
-      onClick: showViewItemModal,
-    },
-    {
-      label: "Edit Product",
-      onClick: showEditItemModal,
-    },
-    {
-      label: "Adjust Stock",
-      onClick: showAdjustStockModal,
-    },
-  ];
-
-  async function init() {
+  async init() {
     try {
-      showLoadingState();
-
-      unsubscribeItems = dataStore.items.subscribe((data, loading, error) => {
-        if (error) return showErrorState(error);
-        if (loading) return;
-        updateData();
-      });
-
-      unsubscribeCategories = dataStore.categories.subscribe(
-        (data, loading, error) => {
-          if (error) return showErrorState(error);
-          if (loading) return;
-          updateData();
-        },
-      );
-
-      unsubscribeStocks = dataStore.stocks.subscribe((data, loading, error) => {
-        if (error) return showErrorState(error);
-        if (loading) return;
-        updateData();
-      });
-
-      dataStore.items.listen();
-      dataStore.categories.listen();
-      dataStore.stocks.listen();
-
-      await Promise.all([
-        dataStore.categories.fetch(),
-        dataStore.items.fetch(),
-        dataStore.stocks.fetch(),
+      await this.initCollections([
+        { collection: dataStore.items, callback: () => this.update() },
+        { collection: dataStore.categories, callback: () => this.update() },
+        { collection: dataStore.stocks, callback: () => this.update() },
       ]);
-      initialized = true;
-      updateData();
+
+      this.update();
     } catch (error) {
-      showErrorState(error);
+      // Handled by initCollections
     }
   }
 
-  function updateData(excludeFilters = false) {
-    if (!initialized) return;
-    if (dataStore.items.data.length >= 0) {
-      const mappedData = dataStore.items.data.map((item) => ({
-        ...item,
-        categoryName:
-          dataStore.categories.idNameMap.get(item.category) ?? "None",
-        totalStock: dataStore.stocks.itemTotals.get(item.id) ?? 0,
-      }));
-      filteredData = applyFilters(mappedData, appliedFilters);
-    }
-    renderAll(excludeFilters);
+  update() {
+    if (!this.initialized) return;
+
+    const items = dataStore.items.data.map((item) => ({
+      ...item,
+      categoryName: dataStore.categories.idNameMap.get(item.category) ?? "None",
+      totalStock: dataStore.stocks.itemTotals.get(item.id) ?? 0,
+    }));
+
+    this.filteredData = this.applyFilters(items, this.filters);
+    this.render();
   }
 
-  function showLoadingState() {
-    main.innerHTML = `
-      <div class="d-flex justify-content-center align-items-center" style="height: 400px;">
-        <div class="text-center">
-          <div class="spinner-border text-primary"></div>
-          <p class="mt-3 text-muted">Loading inventory...</p>
-        </div>
-      </div>
-    `;
+  render() {
+    this.container.innerHTML = "";
+    this.container.append(
+      this.statsEl,
+      this.btnsEl,
+      this.filtersEl,
+      this.tableEl,
+      this.paginationEl,
+    );
+
+    this.renderStats();
+    this.renderButtons();
+    this.renderFilters();
+    this.renderTable();
+    this.renderPagination();
   }
 
-  function showErrorState(error) {
-    main.innerHTML = `
-      <div class="alert alert-danger text-center">
-        <h4>Error Loading Inventory</h4>
-        <p>${error?.message || "Unknown error"}</p>
-        <button class="btn btn-outline-danger" onclick="location.reload()">Retry</button>
-      </div>
-    `;
-  }
-
-  function renderAll(excludeFilters = false) {
-    if (!main.contains(headerButtonsContainer)) {
-      main.innerHTML = "";
-      main.appendChild(statsContainer);
-      main.appendChild(headerButtonsContainer);
-      main.appendChild(filtersContainer);
-      main.appendChild(tableContainer);
-      main.appendChild(paginationContainer);
-    }
-
-    renderStats();
-    renderHeaderButtons();
-    if (!excludeFilters) renderFilters();
-    renderTable();
-    renderPagination();
-  }
-
-  function renderStats() {
-    const total = filteredData.length;
+  renderStats() {
+    const total = this.filteredData.length;
     const original = dataStore.items.data.length;
-    const inStock = filteredData.filter(
-      (item) => getStatus(item) === "In Stock",
-    ).length;
-    const lowStock = filteredData.filter(
-      (item) => getStatus(item) === "Low Stock",
-    ).length;
-    const outStock = filteredData.filter(
-      (item) => getStatus(item) === "Out of Stock",
-    ).length;
+    const counts = ["In Stock", "Low Stock", "Out of Stock"].map(
+      (status) =>
+        this.filteredData.filter((item) => this.getStatus(item) === status)
+          .length,
+    );
 
-    const stats = [
-      {
-        title: total === original ? "All Products" : "Filtered Products",
-        value: total,
-        bgClass: "bg-primary",
-        textClass: "text-white",
-        icon: "bi-box-seam",
-      },
-      {
-        title: "In Stock",
-        value: inStock,
-        bgClass: "bg-success",
-        textClass: "text-white",
-        icon: "bi-check-circle",
-      },
-      {
-        title: "Low Stock",
-        value: lowStock,
-        bgClass: "bg-warning",
-        textClass: "text-dark",
-        icon: "bi-exclamation-triangle",
-      },
-      {
-        title: "Out of Stock",
-        value: outStock,
-        bgClass: "bg-danger",
-        textClass: "text-white",
-        icon: "bi-x-circle",
-      },
-    ];
-
-    statsContainer.innerHTML = "";
-    statsContainer.appendChild(QuickStats(stats));
+    this.statsEl.innerHTML = "";
+    this.statsEl.appendChild(
+      QuickStats([
+        {
+          title: total === original ? "All Products" : "Filtered Products",
+          value: total,
+          bgClass: "bg-primary",
+          textClass: "text-white",
+          icon: "bi-box-seam",
+        },
+        {
+          title: "In Stock",
+          value: counts[0],
+          bgClass: "bg-success",
+          textClass: "text-white",
+          icon: "bi-check-circle",
+        },
+        {
+          title: "Low Stock",
+          value: counts[1],
+          bgClass: "bg-warning",
+          textClass: "text-dark",
+          icon: "bi-exclamation-triangle",
+        },
+        {
+          title: "Out of Stock",
+          value: counts[2],
+          bgClass: "bg-danger",
+          textClass: "text-white",
+          icon: "bi-x-circle",
+        },
+      ]),
+    );
   }
 
-  function renderHeaderButtons() {
-    headerButtonsContainer.innerHTML = "";
+  renderButtons() {
+    this.btnsEl.innerHTML = `
+      <button class="btn btn-outline-primary me-2" id="manageCategoriesBtn">
+        <i class="bi bi-tags me-2"></i>Manage Categories
+      </button>
+      <button class="btn btn-outline-primary" id="addProductBtn">
+        <i class="bi bi-plus-lg me-2"></i>Add Product
+      </button>
+    `;
 
-    // Manage categories
-    const manageCategoriesBtn = document.createElement("button");
-    manageCategoriesBtn.className = "btn btn-outline-primary me-2";
-    manageCategoriesBtn.innerHTML =
-      '<i class="bi bi-tags me-2"></i>Manage Categories';
-    manageCategoriesBtn.onclick = showManageCategoriesModal;
-    headerButtonsContainer.appendChild(manageCategoriesBtn);
-
-    // Add product
-    const addProductBtn = document.createElement("button");
-    addProductBtn.className = "btn btn-outline-primary";
-    addProductBtn.innerHTML = '<i class="bi bi-plus-lg me-2"></i>Add Product';
-    addProductBtn.onclick = showAddItemModal;
-    headerButtonsContainer.appendChild(addProductBtn);
+    this.btnsEl.querySelector("#manageCategoriesBtn").onclick = () =>
+      this.showCategoriesModal();
+    this.btnsEl.querySelector("#addProductBtn").onclick = () =>
+      this.showAddModal();
   }
 
-  function renderFilters() {
-    const categoryOptions = dataStore.categories.getOptions();
-
-    filtersContainer.innerHTML = "";
-    filtersContainer.appendChild(
+  renderFilters() {
+    this.filtersEl.innerHTML = "";
+    this.filtersEl.appendChild(
       TableFilter({
         searchPlaceholder: "Search products...",
         filters: [
-          { id: "category", label: "All Categories", options: categoryOptions },
+          {
+            id: "category",
+            label: "All Categories",
+            options: dataStore.categories.getOptions(),
+          },
           {
             id: "status",
             label: "All Status",
@@ -240,75 +168,84 @@ export default function InventoryPage() {
           { value: "totalStock", label: "Stock (Low-High)" },
           { value: "stock_desc", label: "Stock (High-Low)" },
         ],
-        onFilter: handleFilterChange,
-        initialValues: appliedFilters,
+        onFilter: (f) => {
+          this.filters = f;
+          this.page = 1;
+          this.update();
+        },
+        initialValues: this.filters,
       }),
     );
   }
 
-  function renderTable() {
-    const start = (currentPage - 1) * itemsPerPage;
-    const pageData = filteredData.slice(start, start + itemsPerPage);
+  renderTable() {
+    const start = (this.page - 1) * this.perPage;
+    const pageData = this.filteredData.slice(start, start + this.perPage);
 
-    const rows = pageData.map((item) => ({
-      data: [
-        item.name,
-        item.categoryName,
-        `₱${parseFloat(item.price || 0).toFixed(2)}`,
-        item.totalStock,
-        getStatus(item),
-      ],
-      original: item,
-    }));
+    const rows = pageData.map((item) => [
+      item.name,
+      item.categoryName,
+      `₱${parseFloat(item.price || 0).toFixed(2)}`,
+      item.totalStock,
+      this.getStatus(item),
+    ]);
+
+    const actions = [
+      {
+        label: "View Details",
+        onClick: (_, i) => this.showViewModal(pageData[i]),
+      },
+      {
+        label: "Edit Product",
+        onClick: (_, i) => this.showEditModal(pageData[i]),
+      },
+      {
+        label: "Adjust Stock",
+        onClick: (_, i) => this.showAdjustModal(pageData[i]),
+      },
+    ];
 
     const formatters = {
-      1: (sku) => `<code class="text-muted">${sku}</code>`,
       4: (status) =>
-        `<span class="badge bg-${getStatusColor(status)}">${status}</span>`,
+        `<span class="badge bg-${this.getStatusColor(status)}">${status}</span>`,
     };
 
-    tableContainer.innerHTML = "";
-    tableContainer.appendChild(
+    this.tableEl.innerHTML = "";
+    this.tableEl.appendChild(
       Table(
-        headers,
-        rows.map((row) => row.data),
-        actions.map((action) => ({
-          ...action,
-          onClick: (rowData, rowIndex) => {
-            const item = rows[rowIndex]?.original;
-            if (item) action.onClick(item);
-          },
-        })),
+        ["Product Name", "Category", "Price", "Stock", "Status"],
+        rows,
+        actions,
         formatters,
       ),
     );
   }
 
-  function renderPagination() {
-    paginationContainer.innerHTML = "";
-    if (filteredData.length <= itemsPerPage) return;
+  renderPagination() {
+    this.paginationEl.innerHTML = "";
+    if (this.filteredData.length <= this.perPage) return;
 
-    const start = (currentPage - 1) * itemsPerPage + 1;
-    const end = Math.min(start + itemsPerPage - 1, filteredData.length);
+    const start = (this.page - 1) * this.perPage + 1;
+    const end = Math.min(start + this.perPage - 1, this.filteredData.length);
 
     const summary = document.createElement("div");
     summary.className = "text-muted small";
-    summary.textContent = `${start}-${end} of ${filteredData.length}`;
+    summary.textContent = `${start}-${end} of ${this.filteredData.length}`;
 
-    const pagination = Pagination({
-      totalItems: filteredData.length,
-      itemsPerPage,
-      onPageChange: (page) => {
-        currentPage = page;
-        renderTable();
-      },
-    });
-
-    paginationContainer.appendChild(summary);
-    paginationContainer.appendChild(pagination);
+    this.paginationEl.appendChild(summary);
+    this.paginationEl.appendChild(
+      Pagination({
+        totalItems: this.filteredData.length,
+        itemsPerPage: this.perPage,
+        onPageChange: (p) => {
+          this.page = p;
+          this.renderTable();
+        },
+      }),
+    );
   }
 
-  function applyFilters(data, { search, filters, sort }) {
+  applyFilters(data, { search, filters, sort }) {
     let result = [...data];
 
     if (search) {
@@ -322,159 +259,104 @@ export default function InventoryPage() {
     }
 
     Object.entries(filters).forEach(([key, value]) => {
-      if (value) {
-        if (key === "category") {
-          result = result.filter((item) => item.categoryName === value);
-        } else if (key === "status") {
-          result = result.filter((item) => getStatus(item) === value);
-        } else {
-          result = result.filter((item) => item[key] === value);
-        }
+      if (!value) return;
+      if (key === "category") {
+        result = result.filter((item) => item.categoryName === value);
+      } else if (key === "status") {
+        result = result.filter((item) => this.getStatus(item) === value);
       }
     });
 
     if (sort) {
+      const [field, desc] = sort.includes("_desc")
+        ? [sort.replace("_desc", ""), true]
+        : [sort, false];
+
       result.sort((a, b) => {
-        switch (sort) {
-          case "price":
-            return parseFloat(a.price || 0) - parseFloat(b.price || 0);
-          case "price_desc":
-            return parseFloat(b.price || 0) - parseFloat(a.price || 0);
-          case "totalStock":
-            return (a.totalStock || 0) - (b.totalStock || 0);
-          case "stock_desc":
-            return (b.totalStock || 0) - (a.totalStock || 0);
-          case "category":
-            return (a.categoryName || "").localeCompare(b.categoryName || "");
-          case "name_desc":
-            return (b.name || "").localeCompare(a.name || "");
-          case "name":
-          default:
-            return (a.name || "").localeCompare(b.name || "");
-        }
+        const aVal = field === "price" ? parseFloat(a[field] || 0) : a[field];
+        const bVal = field === "price" ? parseFloat(b[field] || 0) : b[field];
+        const cmp =
+          typeof aVal === "string" ? aVal.localeCompare(bVal) : aVal - bVal;
+        return desc ? -cmp : cmp;
       });
     }
 
     return result;
   }
 
-  function handleFilterChange(newFilters) {
-    appliedFilters = newFilters;
-    currentPage = 1;
-    updateData(true);
-  }
-
-  async function showManageCategoriesModal() {
+  showCategoriesModal() {
     CategoriesModal.show(
-      handleModalAction(
+      this.handleAction(
         (name) => dataStore.categories.addCategory(name),
-        (name) => `Category "${name}" added successfully.`,
-        "Failed to add category.",
+        (name) => `Category "${name}" added`,
+        "Failed to add category",
       ),
-      handleModalAction(
-        (id, newName) => dataStore.categories.updateCategory(id, newName),
-        (id, newName) => `Category "${newName}" renamed successfully"`,
+      this.handleAction(
+        (id, name) => dataStore.categories.updateCategory(id, name),
+        (_, name) => `Category "${name}" updated`,
         "Failed to update category",
       ),
-      handleModalAction(
-        (id, categoryName) => dataStore.categories.deleteCategory(id),
-        (id, categoryName) =>
-          `Category "${categoryName}" deleted successfully.`,
-        "Failed to delete category.",
+      this.handleAction(
+        (id) => dataStore.categories.deleteCategory(id),
+        (_, name) => `Category "${name}" deleted`,
+        "Failed to delete category",
       ),
       () => dataStore.categories.data,
     );
   }
 
-  async function showAddItemModal() {
+  showAddModal() {
     AddItemModal.show(
       dataStore.categories.data,
-      handleModalAction(
-        (newItem) => dataStore.items.addProduct(newItem),
-        (newItem) => `Product ${newItem.name} added successfully.`,
-        "Failed to add product.",
+      this.handleAction(
+        (item) => dataStore.items.addProduct(item),
+        (item) => `Product ${item.name} added`,
+        "Failed to add product",
       ),
     );
   }
 
-  async function showViewItemModal(item) {
-    const stockBatches = dataStore.stocks.getAvailableByItem(item.id);
+  showViewModal(item) {
     ViewItemModal.show(
       item,
-      stockBatches,
-      showEditItemModal,
-      showAdjustStockModal,
+      dataStore.stocks.getAvailableByItem(item.id),
+      (i) => this.showEditModal(i),
+      (i) => this.showAdjustModal(i),
     );
   }
 
-  async function showEditItemModal(item) {
+  showEditModal(item) {
     EditItemModal.show(
       item,
       dataStore.categories.data,
-      handleModalAction(
-        (itemId, updatedData) =>
-          dataStore.items.updateProduct(itemId, updatedData),
-        () => `Product ${item.name} updated successfully.`,
-        "Failed to update product.",
+      this.handleAction(
+        (id, data) => dataStore.items.updateProduct(id, data),
+        () => `Product ${item.name} updated`,
+        "Failed to update product",
       ),
     );
   }
 
-  async function showAdjustStockModal(item) {
-    const stockBatches = dataStore.stocks.getAvailableByItem(item.id);
+  showAdjustModal(item) {
     AdjustStockModal.show(
       item,
-      stockBatches,
-      handleModalAction(
-        (item, quantity, reason) =>
-          dataStore.stocks.adjustStock(item.id, quantity, reason),
-        (item, quantity, reason) =>
-          `Adjusted ${item.name} by ${quantity > 0 ? "+" : ""}${quantity} units.`,
-        "Failed to adjust stock.",
+      dataStore.stocks.getAvailableByItem(item.id),
+      this.handleAction(
+        (i, qty, reason) => dataStore.stocks.adjustStock(i.id, qty, reason),
+        (_, qty) =>
+          `Adjusted ${item.name} by ${qty > 0 ? "+" : ""}${qty} units`,
+        "Failed to adjust stock",
       ),
     );
   }
 
-  function handleModalAction(
-    action,
-    successMsg = "Action completed successfully.",
-    errorPrefix = "Action failed.",
-  ) {
-    return async (...args) => {
-      try {
-        // Check if offline before awaiting
-        if (!navigator.onLine) {
-          action(...args).catch((error) => {
-            console.error("Background sync error:", error);
-            toastManager.showError(`${errorPrefix} ${error.message}`);
-          });
-
-          const msg =
-            typeof successMsg === "function" ? successMsg(...args) : successMsg;
-          toastManager.showSuccess(msg + " (Will sync when online)");
-          return;
-        }
-
-        // Online - wait for confirmation
-        await action(...args);
-        const msg =
-          typeof successMsg === "function" ? successMsg(...args) : successMsg;
-        toastManager.showSuccess(msg);
-      } catch (error) {
-        toastManager.showError(`${errorPrefix} ${error.message}`);
-        throw error;
-      }
-    };
-  }
-
-  function getStatus(item) {
+  getStatus(item) {
     if (item.totalStock > item.minStock) return "In Stock";
-    if (item.totalStock > 0 && item.totalStock <= item.minStock)
-      return "Low Stock";
+    if (item.totalStock > 0) return "Low Stock";
     return "Out of Stock";
   }
 
-  function getStatusColor(status) {
+  getStatusColor(status) {
     const colors = {
       "In Stock": "success",
       "Low Stock": "warning",
@@ -482,17 +364,4 @@ export default function InventoryPage() {
     };
     return colors[status] || "secondary";
   }
-
-  function cleanup() {
-    if (unsubscribeItems) unsubscribeItems();
-    if (unsubscribeCategories) unsubscribeCategories();
-    if (unsubscribeStocks) unsubscribeStocks();
-    dataStore.items.stopListening();
-    dataStore.categories.stopListening();
-    dataStore.stocks.stopListening();
-  }
-
-  window.addEventListener("beforeunload", cleanup);
-  init();
-  return main;
 }
