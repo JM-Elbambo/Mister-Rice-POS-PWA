@@ -1,36 +1,50 @@
+import BasePage from "../components/BasePage.js";
 import { dataStore } from "../store/index.js";
 import toastManager from "../components/ToastManager.js";
 import { Timestamp } from "firebase/firestore";
 
 export default function PurchaseOrderPage() {
-  const main = document.createElement("main");
-  main.className = "container mb-4";
+  const page = new PurchaseOrder();
+  return page.getElement();
+}
 
-  let cart = [];
-  let items = [];
-  let unsubItems = null;
+class PurchaseOrder extends BasePage {
+  constructor() {
+    super();
+    this.cart = [];
+    this.items = [];
+    this.init();
+  }
 
-  async function init() {
+  async init() {
     try {
-      unsubItems = dataStore.items.subscribe((data, loading, error) => {
-        if (error) return showError(error);
-        if (!loading) items = data;
-      });
-
-      dataStore.items.listen();
-      await Promise.all([
-        dataStore.items.fetch(),
-        dataStore.categories.fetch(),
-        dataStore.stocks.fetch(),
+      await this.initCollections([
+        {
+          collection: dataStore.items,
+          callback: (data, loading, error) => {
+            if (error) return this.showError(error);
+            if (!loading) {
+              this.items = data;
+              if (this.initialized) this.updateSearchResults();
+            }
+          },
+        },
+        { collection: dataStore.categories, callback: () => {} },
+        { collection: dataStore.stocks, callback: () => {} },
       ]);
-      renderInitial();
+
+      // Set items after collections are initialized
+      this.items = dataStore.items.data;
+      this.render();
     } catch (error) {
-      showError(error);
+      // Handled by initCollections
     }
   }
 
-  function renderInitial() {
-    main.innerHTML = `
+  render() {
+    const today = new Date().toISOString().split("T")[0];
+
+    this.container.innerHTML = `
       <div class="row">
         <div class="col-lg-8">
           <div class="card">
@@ -46,7 +60,7 @@ export default function PurchaseOrderPage() {
                   </div>
                   <div class="col-md-6">
                     <label class="form-label">Purchase Date <span class="text-danger">*</span></label>
-                    <input type="date" class="form-control" id="purchaseDate" value="${new Date().toISOString().split("T")[0]}" max="${new Date().toISOString().split("T")[0]}" required>
+                    <input type="date" class="form-control" id="purchaseDate" value="${today}" max="${today}" required>
                   </div>
                 </div>
 
@@ -70,13 +84,7 @@ export default function PurchaseOrderPage() {
                         <th style="width: 50px;"></th>
                       </tr>
                     </thead>
-                    <tbody id="cartBody">
-                      <tr>
-                        <td colspan="5" class="text-center text-muted py-4">
-                          No items added yet
-                        </td>
-                      </tr>
-                    </tbody>
+                    <tbody id="cartBody"></tbody>
                   </table>
                 </div>
               </form>
@@ -118,76 +126,16 @@ export default function PurchaseOrderPage() {
       </div>
     `;
 
-    attachListeners();
+    this.attachListeners();
+    this.updateCart();
   }
 
-  function renderCart() {
-    const cartBody = main.querySelector("#cartBody");
-
-    cartBody.innerHTML = cart.length
-      ? cart
-          .map(
-            (item, i) => `
-      <tr data-cart-item="${i}">
-        <td class="align-middle">
-          <div>${item.name}</div>
-          ${item.sku ? `<small class="text-muted">SKU: ${item.sku}</small>` : ""}
-        </td>
-        <td>
-          <input type="number" class="form-control" value="${item.quantity}" min="1" data-qty="${i}" required>
-        </td>
-        <td>
-          <div class="input-group">
-            <span class="input-group-text">₱</span>
-            <input type="number" class="form-control" value="${item.unitCost}" min="0" step="0.01" data-cost="${i}" required>
-          </div>
-        </td>
-        <td class="text-end align-middle fw-semibold" data-subtotal="${i}">₱${(item.quantity * item.unitCost).toFixed(2)}</td>
-        <td>
-          <button type="button" class="btn btn-sm btn-outline-danger" data-remove="${i}">
-            <i class="bi bi-trash"></i>
-          </button>
-        </td>
-      </tr>
-    `,
-          )
-          .join("")
-      : `
-      <tr>
-        <td colspan="5" class="text-center text-muted py-4">
-          No items added yet
-        </td>
-      </tr>
-    `;
-
-    updateButtons();
-  }
-
-  function updateSummary() {
-    const summaryItems = main.querySelector("#summaryItems");
-    const summaryUnits = main.querySelector("#summaryUnits");
-    const summaryTotal = main.querySelector("#summaryTotal");
-
-    if (summaryItems) summaryItems.textContent = cart.length;
-    if (summaryUnits)
-      summaryUnits.textContent = cart.reduce((sum, i) => sum + i.quantity, 0);
-    if (summaryTotal)
-      summaryTotal.textContent = `₱${cart.reduce((sum, i) => sum + i.quantity * i.unitCost, 0).toFixed(2)}`;
-  }
-
-  function updateButtons() {
-    const submitBtn = main.querySelector("#submitBtn");
-    const clearBtn = main.querySelector("#clearBtn");
-
-    if (submitBtn) submitBtn.disabled = cart.length === 0;
-    if (clearBtn) clearBtn.disabled = cart.length === 0;
-  }
-
-  function attachListeners() {
-    const searchInput = main.querySelector("#searchInput");
-    const searchResults = main.querySelector("#searchResults");
-    const cartBody = main.querySelector("#cartBody");
-    const form = main.querySelector("#poForm");
+  attachListeners() {
+    const searchInput = this.container.querySelector("#searchInput");
+    const searchResults = this.container.querySelector("#searchResults");
+    const cartBody = this.container.querySelector("#cartBody");
+    const form = this.container.querySelector("#poForm");
+    const clearBtn = this.container.querySelector("#clearBtn");
 
     let searchTimeout;
     searchInput.addEventListener("input", (e) => {
@@ -200,7 +148,7 @@ export default function PurchaseOrderPage() {
       }
 
       searchTimeout = setTimeout(() => {
-        const matches = items
+        const matches = this.items
           .filter(
             (item) =>
               item.name.toLowerCase().includes(val) ||
@@ -212,16 +160,16 @@ export default function PurchaseOrderPage() {
           ? matches
               .map(
                 (item) => `
-          <button type="button" class="list-group-item list-group-item-action" data-add="${item.id}">
-            <div class="d-flex justify-content-between">
-              <div>
-                <div>${item.name}</div>
-                <small class="text-muted">SKU: ${item.sku || "N/A"} | Stock: ${dataStore.stocks.itemTotals.get(item.id) ?? 0}</small>
-              </div>
-              <i class="bi bi-plus-circle"></i>
-            </div>
-          </button>
-        `,
+              <button type="button" class="list-group-item list-group-item-action" data-add="${item.id}">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <div>${item.name}</div>
+                    <small class="text-muted">SKU: ${item.sku || "N/A"} | Stock: ${dataStore.stocks.itemTotals.get(item.id) ?? 0}</small>
+                  </div>
+                  <i class="bi bi-plus-circle"></i>
+                </div>
+              </button>
+            `,
               )
               .join("")
           : '<div class="list-group-item text-muted">No matches</div>';
@@ -232,14 +180,14 @@ export default function PurchaseOrderPage() {
       const btn = e.target.closest("[data-add]");
       if (!btn) return;
 
-      const item = items.find((i) => i.id === btn.dataset.add);
+      const item = this.items.find((i) => i.id === btn.dataset.add);
       if (!item) return;
 
-      const existing = cart.find((c) => c.itemId === item.id);
+      const existing = this.cart.find((c) => c.itemId === item.id);
       if (existing) {
         existing.quantity++;
       } else {
-        cart.push({
+        this.cart.push({
           itemId: item.id,
           name: item.name,
           sku: item.sku,
@@ -252,124 +200,173 @@ export default function PurchaseOrderPage() {
       searchResults.innerHTML = "";
       searchInput.focus();
 
-      renderCart();
-      updateSummary();
+      this.updateCart();
     });
 
     cartBody.addEventListener("input", (e) => {
-      const qtyInput = e.target.closest("[data-qty]");
-      const costInput = e.target.closest("[data-cost]");
+      const target = e.target;
+      const row = target.closest("tr");
+      if (!row) return;
 
-      if (qtyInput) {
-        const i = parseInt(qtyInput.dataset.qty);
-        cart[i].quantity = Math.max(1, parseInt(qtyInput.value) || 1);
+      const i = parseInt(row.dataset.index);
 
-        const subtotal = main.querySelector(`[data-subtotal="${i}"]`);
-        if (subtotal) {
-          subtotal.textContent = `₱${(cart[i].quantity * cart[i].unitCost).toFixed(2)}`;
-        }
-        updateSummary();
-      } else if (costInput) {
-        const i = parseInt(costInput.dataset.cost);
-        cart[i].unitCost = Math.max(0, parseFloat(costInput.value) || 0);
-
-        const subtotal = main.querySelector(`[data-subtotal="${i}"]`);
-        if (subtotal) {
-          subtotal.textContent = `₱${(cart[i].quantity * cart[i].unitCost).toFixed(2)}`;
-        }
-        updateSummary();
+      if (target.dataset.qty !== undefined) {
+        this.cart[i].quantity = Math.max(1, parseInt(target.value) || 1);
+      } else if (target.dataset.cost !== undefined) {
+        this.cart[i].unitCost = Math.max(0, parseFloat(target.value) || 0);
       }
+
+      this.updateSubtotal(i);
+      this.updateSummary();
     });
 
     cartBody.addEventListener("click", (e) => {
       const btn = e.target.closest("[data-remove]");
       if (!btn) return;
-      cart.splice(parseInt(btn.dataset.remove), 1);
-      renderCart();
-      updateSummary();
+      this.cart.splice(parseInt(btn.dataset.remove), 1);
+      this.updateCart();
     });
 
-    main.querySelector("#clearBtn")?.addEventListener("click", () => {
-      cart = [];
-      renderCart();
-      updateSummary();
+    clearBtn.addEventListener("click", () => {
+      this.cart = [];
+      this.updateCart();
     });
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const supplier = form.querySelector("#supplier").value.trim() || null;
-      const purchaseDate = form.querySelector("#purchaseDate").value;
-
-      if (!cart.length) {
-        toastManager.showError("Add items to cart");
-        return;
-      }
-
-      const invalidItem = cart.find((i) => i.unitCost < 0 || i.quantity < 1);
-      if (invalidItem) {
-        toastManager.showError("Check quantities and costs");
-        return;
-      }
-
-      const btn = main.querySelector("#submitBtn");
-      const orig = btn.innerHTML;
-      btn.innerHTML =
-        '<span class="spinner-border spinner-border-sm me-2"></span>Submitting...';
-      btn.disabled = true;
-
-      try {
-        const poId = `PO-${Date.now()}`;
-        const timestamp = Timestamp.fromDate(new Date(purchaseDate));
-
-        await Promise.all(
-          cart.map((item) =>
-            dataStore.stocks.addStockFromPo({
-              itemId: item.itemId,
-              poId,
-              qty: item.quantity,
-              unitCost: item.unitCost,
-              purchaseDate: timestamp,
-              supplier,
-            }),
-          ),
-        );
-
-        toastManager.showSuccess(
-          `PO ${poId} submitted: ${cart.length} items, ${cart.reduce((s, i) => s + i.quantity, 0)} units`,
-        );
-
-        cart = [];
-        form.querySelector("#supplier").value = "";
-        form.querySelector("#purchaseDate").value = new Date()
-          .toISOString()
-          .split("T")[0];
-        renderCart();
-        updateSummary();
-      } catch (error) {
-        toastManager.showError(`Failed: ${error.message}`);
-      } finally {
-        btn.innerHTML = orig;
-        btn.disabled = false;
-      }
-    });
+    form.addEventListener("submit", (e) => this.handleSubmit(e));
   }
 
-  function showError(error) {
-    main.innerHTML = `
-      <div class="alert alert-danger">
-        <h4>Error</h4>
-        <p>${error?.message || "Unknown error"}</p>
-      </div>
-    `;
+  updateCart() {
+    const cartBody = this.container.querySelector("#cartBody");
+
+    cartBody.innerHTML = this.cart.length
+      ? this.cart
+          .map(
+            (item, i) => `
+          <tr data-index="${i}">
+            <td class="align-middle">
+              <div>${item.name}</div>
+              ${item.sku ? `<small class="text-muted">SKU: ${item.sku}</small>` : ""}
+            </td>
+            <td>
+              <input type="number" class="form-control" value="${item.quantity}" min="1" data-qty required>
+            </td>
+            <td>
+              <div class="input-group">
+                <span class="input-group-text">₱</span>
+                <input type="number" class="form-control" value="${item.unitCost}" min="0" step="0.01" data-cost required>
+              </div>
+            </td>
+            <td class="text-end align-middle fw-semibold" data-subtotal="${i}">
+              ₱${(item.quantity * item.unitCost).toFixed(2)}
+            </td>
+            <td>
+              <button type="button" class="btn btn-sm btn-outline-danger" data-remove="${i}">
+                <i class="bi bi-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `,
+          )
+          .join("")
+      : `<tr><td colspan="5" class="text-center text-muted py-4">No items added yet</td></tr>`;
+
+    this.updateSummary();
+    this.updateButtons();
   }
 
-  function cleanup() {
-    if (unsubItems) unsubItems();
-    dataStore.items.stopListening();
+  updateSubtotal(index) {
+    const subtotalEl = this.container.querySelector(
+      `[data-subtotal="${index}"]`,
+    );
+    if (subtotalEl) {
+      const { quantity, unitCost } = this.cart[index];
+      subtotalEl.textContent = `₱${(quantity * unitCost).toFixed(2)}`;
+    }
   }
 
-  window.addEventListener("beforeunload", cleanup);
-  init();
-  return main;
+  updateSummary() {
+    const items = this.cart.length;
+    const units = this.cart.reduce((sum, i) => sum + i.quantity, 0);
+    const total = this.cart.reduce(
+      (sum, i) => sum + i.quantity * i.unitCost,
+      0,
+    );
+
+    this.container.querySelector("#summaryItems").textContent = items;
+    this.container.querySelector("#summaryUnits").textContent = units;
+    this.container.querySelector("#summaryTotal").textContent =
+      `₱${total.toFixed(2)}`;
+  }
+
+  updateButtons() {
+    const isEmpty = this.cart.length === 0;
+    this.container.querySelector("#submitBtn").disabled = isEmpty;
+    this.container.querySelector("#clearBtn").disabled = isEmpty;
+  }
+
+  updateSearchResults() {
+    const searchInput = this.container.querySelector("#searchInput");
+    if (searchInput && searchInput.value.trim()) {
+      searchInput.dispatchEvent(new Event("input"));
+    }
+  }
+
+  async handleSubmit(e) {
+    e.preventDefault();
+
+    const form = e.target;
+    const supplier = form.querySelector("#supplier").value.trim() || null;
+    const purchaseDate = form.querySelector("#purchaseDate").value;
+
+    if (!this.cart.length) {
+      toastManager.showError("Add items to cart");
+      return;
+    }
+
+    if (this.cart.some((i) => i.unitCost < 0 || i.quantity < 1)) {
+      toastManager.showError("Check quantities and costs");
+      return;
+    }
+
+    const btn = this.container.querySelector("#submitBtn");
+    const orig = btn.innerHTML;
+    btn.innerHTML =
+      '<span class="spinner-border spinner-border-sm me-2"></span>Submitting...';
+    btn.disabled = true;
+
+    try {
+      const poId = `PO-${Date.now()}`;
+      const timestamp = Timestamp.fromDate(new Date(purchaseDate));
+
+      await Promise.all(
+        this.cart.map((item) =>
+          dataStore.stocks.addStockFromPo({
+            itemId: item.itemId,
+            poId,
+            qty: item.quantity,
+            unitCost: item.unitCost,
+            purchaseDate: timestamp,
+            supplier,
+          }),
+        ),
+      );
+
+      const totalUnits = this.cart.reduce((s, i) => s + i.quantity, 0);
+      toastManager.showSuccess(
+        `PO ${poId} submitted: ${this.cart.length} items, ${totalUnits} units`,
+      );
+
+      this.cart = [];
+      form.querySelector("#supplier").value = "";
+      form.querySelector("#purchaseDate").value = new Date()
+        .toISOString()
+        .split("T")[0];
+      this.updateCart();
+    } catch (error) {
+      toastManager.showError(`Failed: ${error.message}`);
+    } finally {
+      btn.innerHTML = orig;
+      btn.disabled = false;
+    }
+  }
 }
