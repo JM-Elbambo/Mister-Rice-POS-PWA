@@ -214,7 +214,9 @@ class Inventory extends BasePage {
     };
 
     this.tableEl.innerHTML = "";
-    this.tableEl.appendChild(
+    const wrapper = document.createElement("div");
+    wrapper.className = "table-responsive";
+    wrapper.appendChild(
       Table(
         ["Product Name", "Category", "Price", "Stock", "Status"],
         rows,
@@ -222,6 +224,8 @@ class Inventory extends BasePage {
         formatters,
       ),
     );
+
+    this.tableEl.appendChild(wrapper);
   }
 
   renderPagination() {
