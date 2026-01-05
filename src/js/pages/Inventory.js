@@ -128,10 +128,10 @@ class Inventory extends BasePage {
 
   renderButtons() {
     this.btnsEl.innerHTML = `
-      <button class="btn btn-outline-primary me-2" id="manageCategoriesBtn">
+      <button class="btn btn-outline-primary bg-body me-2" id="manageCategoriesBtn">
         <i class="bi bi-tags me-2"></i>Manage Categories
       </button>
-      <button class="btn btn-outline-primary" id="addProductBtn">
+      <button class="btn btn-outline-primary bg-body" id="addProductBtn">
         <i class="bi bi-plus-lg me-2"></i>Add Product
       </button>
     `;
