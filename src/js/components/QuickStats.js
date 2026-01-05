@@ -14,7 +14,7 @@ export default function QuickStats(stats = []) {
 
   stats.forEach(({ title, value, id, bgClass, textClass, icon }) => {
     const col = document.createElement("div");
-    col.className = "col-lg-3 col-sm-6 mb-3";
+    col.className = "col-md-3 col-6 mb-3";
 
     const card = document.createElement("div");
     card.className = `card ${bgClass} ${textClass}`;
