@@ -351,7 +351,7 @@ class Inventory extends BasePage {
       this.handleAction(
         (i, qty, reason) => dataStore.stocks.adjustStock(i.id, qty, reason),
         (_, qty) =>
-          `Adjusted ${item.name} by ${qty > 0 ? "+" : ""}${qty} units`,
+          `Adjusted ${item.name} by ${qty > 0 ? "+" : ""}${qty} unit(s)`,
         "Failed to adjust stock",
       ),
     );

@@ -353,7 +353,7 @@ class PurchaseOrder extends BasePage {
 
       const totalUnits = this.cart.reduce((s, i) => s + i.quantity, 0);
       toastManager.showSuccess(
-        `PO ${poId} submitted: ${this.cart.length} items, ${totalUnits} units`,
+        `PO ${poId} submitted: ${this.cart.length} items, ${totalUnits} unit(s)`,
       );
 
       this.cart = [];

@@ -80,7 +80,7 @@ export default class AddItemModal extends BaseModal {
                 min="0" 
                 required
               >
-              <span class="input-group-text">units</span>
+              <span class="input-group-text">unit(s)</span>
             </div>
             <div class="invalid-feedback">Please enter a valid minimum stock level.</div>
           </div>

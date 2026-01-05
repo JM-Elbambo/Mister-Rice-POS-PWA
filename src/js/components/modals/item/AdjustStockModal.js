@@ -154,8 +154,8 @@ export default class AdjustStockModal extends BaseModal {
           previewTotal.textContent = "No purchase orders available";
         } else {
           const newTotal = current + qty;
-          previewChange.textContent = `+${qty} units`;
-          previewTotal.textContent = `${newTotal} units`;
+          previewChange.textContent = `+${qty} unit(s)`;
+          previewTotal.textContent = `${newTotal} unit(s)`;
         }
       } else {
         // Subtracting stock
@@ -166,8 +166,8 @@ export default class AdjustStockModal extends BaseModal {
         } else {
           const newTotal = current - qty;
           qtyError.textContent = "Must be greater than 0";
-          previewChange.textContent = `-${qty} units`;
-          previewTotal.textContent = `${newTotal} units`;
+          previewChange.textContent = `-${qty} unit(s)`;
+          previewTotal.textContent = `${newTotal} unit(s)`;
         }
       }
     };
@@ -204,7 +204,7 @@ export default class AdjustStockModal extends BaseModal {
         if (qty > current) {
           isValid = false;
           qtyInput.classList.add("is-invalid");
-          qtyError.textContent = `Cannot exceed current stock of ${current} units`;
+          qtyError.textContent = `Cannot exceed current stock of ${current} unit(s)`;
         }
       }
 
