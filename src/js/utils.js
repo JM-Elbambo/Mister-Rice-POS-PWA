@@ -1,3 +1,5 @@
+import { Timestamp } from "firebase/firestore";
+
 export function timestampToDateString(timestamp) {
   return new Intl.DateTimeFormat("en-CA", {
     year: "numeric",
@@ -8,4 +10,8 @@ export function timestampToDateString(timestamp) {
 
 export function formatCurrency(amount) {
   return parseFloat(amount || 0).toFixed(2);
+}
+
+export function daysAgo(days) {
+  return Timestamp.fromDate(new Date(Date.now() - days * 86400000));
 }

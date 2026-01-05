@@ -1,6 +1,14 @@
 import { BaseCollection } from "./baseCollection.js";
-import { collection, query, where, updateDoc, doc } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  updateDoc,
+  doc,
+  or,
+} from "firebase/firestore";
 import { db } from "../../firebase.js";
+import { daysAgo } from "../../utils.js";
 
 class StocksCollection extends BaseCollection {
   constructor() {
@@ -8,14 +16,17 @@ class StocksCollection extends BaseCollection {
 
     this.query = query(
       collection(db, this.collectionName),
-      where("remainingQty", ">", 0),
+      or(
+        where("remainingQty", ">", 0),
+        where("purchaseDate", ">=", daysAgo(90)),
+      ),
     );
     this.itemTotals = new Map();
   }
 
   processData(rawData) {
     this.data = rawData.sort(
-      (a, b) => new Date(a.purchaseDate) - new Date(b.purchaseDate),
+      (a, b) => a.purchaseDate.toMillis() - b.purchaseDate.toMillis(),
     );
     this.itemTotals = new Map();
 
@@ -87,7 +98,6 @@ class StocksCollection extends BaseCollection {
       updates.map((u) =>
         updateDoc(doc(db, this.collectionName, u.id), {
           remainingQty: u.remainingQty,
-          lastUpdated: new Date().toISOString(),
         }),
       ),
     );
@@ -122,7 +132,6 @@ class StocksCollection extends BaseCollection {
       updates.map((u) =>
         updateDoc(doc(db, this.collectionName, u.id), {
           remainingQty: u.remainingQty,
-          lastUpdated: new Date().toISOString(),
         }),
       ),
     );
