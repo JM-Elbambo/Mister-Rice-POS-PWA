@@ -49,7 +49,7 @@ class PurchaseOrder extends BasePage {
         <div class="col-lg-8">
           <div class="card">
             <div class="card-header">
-              <h5 class="mb-0"><i class="bi bi-cart-plus me-2"></i>New Purchase Order</h5>
+              <h5 class="mb-0">New Purchase Order</h5>
             </div>
             <div class="card-body">
               <form id="poForm">
