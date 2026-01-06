@@ -160,6 +160,7 @@ export default class ViewItemModal extends BaseModal {
             <thead class="table-light">
               <tr>
                 <th>Id</th>
+                <th>Supplier</th>
                 <th class="text-end">Remaining Qty</th>
                 <th class="text-end">Received Qty</th>
                 <th class="text-end">Unit Cost</th>
@@ -173,6 +174,7 @@ export default class ViewItemModal extends BaseModal {
                   (batch) => `
                 <tr>
                   <td><code class="text-muted">${batch.poId}</code></td>
+                  <td><code class="text-muted">${batch.supplier || ""}</code></td>
                   <td class="text-end">${batch.remainingQty}</td>
                   <td class="text-end">${batch.receivedQty}</td>
                   <td class="text-end">₱${formatCurrency(batch.unitCost)}</td>
