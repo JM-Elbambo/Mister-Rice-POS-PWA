@@ -158,19 +158,20 @@ class PurchaseOrder extends BasePage {
 
         searchResults.innerHTML = matches.length
           ? matches
-              .map(
-                (item) => `
-              <button type="button" class="list-group-item list-group-item-action" data-add="${item.id}">
-                <div class="d-flex justify-content-between">
-                  <div>
-                    <div>${item.name}</div>
-                    <small class="text-muted">SKU: ${item.sku || "N/A"} | Stock: ${dataStore.stocks.itemTotals.get(item.id) ?? 0}</small>
-                  </div>
-                  <i class="bi bi-plus-circle"></i>
-                </div>
-              </button>
-            `,
-              )
+              .map((item) => {
+                const stock = dataStore.stocks.getItemTotal(item.id);
+                return `
+                  <button type="button" class="list-group-item list-group-item-action" data-add="${item.id}">
+                    <div class="d-flex justify-content-between">
+                      <div>
+                        <div>${item.name}</div>
+                        <small class="text-muted">SKU: ${item.sku || "N/A"} | Stock: ${stock}</small>
+                      </div>
+                      <i class="bi bi-plus-circle"></i>
+                    </div>
+                  </button>
+                `;
+              })
               .join("")
           : '<div class="list-group-item text-muted">No matches</div>';
       }, 500);

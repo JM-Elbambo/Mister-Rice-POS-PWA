@@ -52,10 +52,12 @@ class Inventory extends BasePage {
   update(skipFilters = false) {
     if (!this.initialized) return;
 
+    dataStore.stocks.ensureTotals();
+
     const items = dataStore.items.data.map((item) => ({
       ...item,
       categoryName: dataStore.categories.idNameMap.get(item.category) ?? "None",
-      totalStock: dataStore.stocks.itemTotals.get(item.id) ?? 0,
+      totalStock: dataStore.stocks.getItemTotal(item.id),
     }));
 
     this.filteredData = this.applyFilters(items, this.filters);
