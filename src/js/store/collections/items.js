@@ -5,6 +5,11 @@ class ItemsCollection extends BaseCollection {
     super("items");
   }
 
+  // Custom processing: sort alphabetically
+  processData(rawData) {
+    this.data = rawData.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
   // Get item by name (case-insensitive)
   getByName(name) {
     return this.data.find(
