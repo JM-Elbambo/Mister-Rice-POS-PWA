@@ -1,11 +1,11 @@
 import { Modal } from "bootstrap";
 
 const navLinks = [
-  { path: "/dashboard", label: "Dashboard", icon: "speedometer2" },
+  { path: "/dashboard", label: "Dashboard", icon: "grid" },
   { path: "/cashier", label: "Cashier", icon: "cart-check" },
   { path: "/inventory", label: "Inventory", icon: "box-seam" },
-  { path: "/purchase-order", label: "Purchase Order", icon: "cart-plus" },
-  { path: "/transactions", label: "Transactions", icon: "receipt" },
+  { path: "/purchase-order", label: "Purchase Order", icon: "clipboard-plus" },
+  { path: "/transactions", label: "Transactions", icon: "clock-history" },
 ];
 
 export default function Navbar(activePath = "/pos", hasAccess = true) {
