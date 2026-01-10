@@ -5,7 +5,7 @@ import { dataStore } from "./store/index";
 import SigninPage from "./pages/Signin";
 import UnauthorizedPage from "./pages/UnauthorizedPage";
 import DashboardPage from "./pages/Dashboard";
-// import PointOfSalePage from "./pages/PointOfSale";
+import CashierPage from "./pages/Cashier";
 import InventoryPage from "./pages/Inventory";
 import PurchaseOrderPage from "./pages/PurchaseOrderPage";
 // import TransactionsPage from "./pages/Transactions";
@@ -17,7 +17,7 @@ const routes = {
   "/signin": SigninPage,
   "/unauthorized": UnauthorizedPage,
   "/dashboard": DashboardPage,
-  //   "/pos": POSPage,
+  "/cashier": CashierPage,
   //   "/transactions": TransactionsPage,
   "/inventory": InventoryPage,
   "/purchase-order": PurchaseOrderPage,

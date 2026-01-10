@@ -2,7 +2,7 @@ import { Modal } from "bootstrap";
 
 const navLinks = [
   { path: "/dashboard", label: "Dashboard", icon: "speedometer2" },
-  { path: "/pos", label: "Point of Sale", icon: "cash-coin" },
+  { path: "/cashier", label: "Cashier", icon: "cart-check" },
   { path: "/inventory", label: "Inventory", icon: "box-seam" },
   { path: "/purchase-order", label: "Purchase Order", icon: "cart-plus" },
   { path: "/transactions", label: "Transactions", icon: "receipt" },
