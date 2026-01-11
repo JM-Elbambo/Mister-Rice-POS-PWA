@@ -12,12 +12,16 @@ class PurchaseOrder extends BasePage {
   constructor() {
     super();
     this.cart = [];
+    this.supplier = "";
+    this.purchaseDate = new Date().toISOString().split("T")[0];
     this.items = [];
     this.init();
   }
 
   async init() {
     try {
+      this.loadCart();
+
       await this.initCollections([
         {
           collection: dataStore.items,
@@ -33,12 +37,72 @@ class PurchaseOrder extends BasePage {
         { collection: dataStore.stocks, callback: () => {} },
       ]);
 
-      // Set items after collections are initialized
       this.items = dataStore.items.data;
+      this.validateCart();
       this.render();
     } catch (error) {
       // Handled by initCollections
     }
+  }
+
+  loadCart() {
+    try {
+      const stored = localStorage.getItem("po-cart");
+      if (stored) {
+        const data = JSON.parse(stored);
+        this.cart = data.cart || [];
+        this.supplier = data.supplier || "";
+        this.purchaseDate =
+          data.purchaseDate || new Date().toISOString().split("T")[0];
+      }
+    } catch (error) {
+      this.cart = [];
+      this.supplier = "";
+      this.purchaseDate = new Date().toISOString().split("T")[0];
+    }
+  }
+
+  saveCart() {
+    try {
+      if (this.cart.length === 0) {
+        localStorage.removeItem("po-cart");
+      } else {
+        localStorage.setItem(
+          "po-cart",
+          JSON.stringify({
+            cart: this.cart,
+            supplier: this.supplier || "",
+            purchaseDate: this.purchaseDate,
+          }),
+        );
+      }
+    } catch (error) {
+      console.error("Failed to save cart:", error);
+    }
+  }
+
+  clearCart() {
+    try {
+      localStorage.removeItem("po-cart");
+    } catch (error) {
+      console.error("Failed to clear cart:", error);
+    }
+  }
+
+  validateCart() {
+    if (!this.items.length) return;
+
+    let updated = false;
+    this.cart = this.cart.filter((item) => {
+      const product = this.items.find((i) => i.id === item.itemId);
+      if (!product) {
+        updated = true;
+        return false;
+      }
+      return true;
+    });
+
+    if (updated) this.saveCart();
   }
 
   render() {
@@ -49,18 +113,18 @@ class PurchaseOrder extends BasePage {
         <div class="col-lg-8">
           <div class="card">
             <div class="card-header">
-              <h5 class="mb-0">New Purchase Order</h5>
+              <h5 class="mb-0"><i class="bi bi-cart-plus me-2"></i>New Purchase Order</h5>
             </div>
             <div class="card-body">
               <form id="poForm">
                 <div class="row g-3 mb-4">
                   <div class="col-md-6">
                     <label class="form-label">Supplier Name</label>
-                    <input type="text" class="form-control" id="supplier" placeholder="None">
+                    <input type="text" class="form-control" id="supplier" placeholder="None" value="${this.supplier}">
                   </div>
                   <div class="col-md-6">
                     <label class="form-label">Purchase Date <span class="text-danger">*</span></label>
-                    <input type="date" class="form-control" id="purchaseDate" value="${today}" max="${today}" required>
+                    <input type="date" class="form-control" id="purchaseDate" value="${this.purchaseDate}" max="${today}" required>
                   </div>
                 </div>
 
@@ -136,6 +200,20 @@ class PurchaseOrder extends BasePage {
     const cartBody = this.container.querySelector("#cartBody");
     const form = this.container.querySelector("#poForm");
     const clearBtn = this.container.querySelector("#clearBtn");
+    const supplierInput = this.container.querySelector("#supplier");
+    const dateInput = this.container.querySelector("#purchaseDate");
+
+    // Save supplier on input
+    supplierInput.addEventListener("input", (e) => {
+      this.supplier = e.target.value.trim();
+      this.saveCart();
+    });
+
+    // Save purchase date on change
+    dateInput.addEventListener("change", (e) => {
+      this.purchaseDate = e.target.value;
+      this.saveCart();
+    });
 
     let searchTimeout;
     searchInput.addEventListener("input", (e) => {
@@ -158,20 +236,19 @@ class PurchaseOrder extends BasePage {
 
         searchResults.innerHTML = matches.length
           ? matches
-              .map((item) => {
-                const stock = dataStore.stocks.getItemTotal(item.id);
-                return `
-                  <button type="button" class="list-group-item list-group-item-action" data-add="${item.id}">
-                    <div class="d-flex justify-content-between">
-                      <div>
-                        <div>${item.name}</div>
-                        <small class="text-muted">SKU: ${item.sku || "N/A"} | Stock: ${stock}</small>
-                      </div>
-                      <i class="bi bi-plus-circle"></i>
-                    </div>
-                  </button>
-                `;
-              })
+              .map(
+                (item) => `
+              <button type="button" class="list-group-item list-group-item-action" data-add="${item.id}">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <div>${item.name}</div>
+                    <small class="text-muted">SKU: ${item.sku || "N/A"} | Stock: ${dataStore.stocks.itemTotals.get(item.id) ?? 0}</small>
+                  </div>
+                  <i class="bi bi-plus-circle"></i>
+                </div>
+              </button>
+            `,
+              )
               .join("")
           : '<div class="list-group-item text-muted">No matches</div>';
       }, 500);
@@ -202,23 +279,24 @@ class PurchaseOrder extends BasePage {
       searchInput.focus();
 
       this.updateCart();
+      this.saveCart();
     });
 
     cartBody.addEventListener("input", (e) => {
-      const target = e.target;
-      const row = target.closest("tr");
+      const row = e.target.closest("tr");
       if (!row) return;
 
       const i = parseInt(row.dataset.index);
 
-      if (target.dataset.qty !== undefined) {
-        this.cart[i].quantity = Math.max(1, parseInt(target.value) || 1);
-      } else if (target.dataset.cost !== undefined) {
-        this.cart[i].unitCost = Math.max(0, parseFloat(target.value) || 0);
+      if (e.target.dataset.qty !== undefined) {
+        this.cart[i].quantity = Math.max(1, parseInt(e.target.value) || 1);
+      } else if (e.target.dataset.cost !== undefined) {
+        this.cart[i].unitCost = Math.max(0, parseFloat(e.target.value) || 0);
       }
 
       this.updateSubtotal(i);
       this.updateSummary();
+      this.saveCart();
     });
 
     cartBody.addEventListener("click", (e) => {
@@ -226,11 +304,18 @@ class PurchaseOrder extends BasePage {
       if (!btn) return;
       this.cart.splice(parseInt(btn.dataset.remove), 1);
       this.updateCart();
+      this.saveCart();
     });
 
     clearBtn.addEventListener("click", () => {
       this.cart = [];
+      this.supplier = "";
+      this.purchaseDate = new Date().toISOString().split("T")[0];
+      this.container.querySelector("#supplier").value = "";
+      this.container.querySelector("#purchaseDate").value = this.purchaseDate;
       this.updateCart();
+      this.clearCart();
+      searchInput.focus();
     });
 
     form.addEventListener("submit", (e) => this.handleSubmit(e));
@@ -276,12 +361,10 @@ class PurchaseOrder extends BasePage {
   }
 
   updateSubtotal(index) {
-    const subtotalEl = this.container.querySelector(
-      `[data-subtotal="${index}"]`,
-    );
-    if (subtotalEl) {
+    const el = this.container.querySelector(`[data-subtotal="${index}"]`);
+    if (el) {
       const { quantity, unitCost } = this.cart[index];
-      subtotalEl.textContent = `₱${(quantity * unitCost).toFixed(2)}`;
+      el.textContent = `₱${(quantity * unitCost).toFixed(2)}`;
     }
   }
 
@@ -358,11 +441,12 @@ class PurchaseOrder extends BasePage {
       );
 
       this.cart = [];
+      this.supplier = "";
+      this.purchaseDate = new Date().toISOString().split("T")[0];
       form.querySelector("#supplier").value = "";
-      form.querySelector("#purchaseDate").value = new Date()
-        .toISOString()
-        .split("T")[0];
+      form.querySelector("#purchaseDate").value = this.purchaseDate;
       this.updateCart();
+      this.clearCart();
     } catch (error) {
       toastManager.showError(`Failed: ${error.message}`);
     } finally {
