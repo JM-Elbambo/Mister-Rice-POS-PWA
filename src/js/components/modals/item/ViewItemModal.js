@@ -169,7 +169,6 @@ export default class ViewItemModal extends BaseModal {
             </thead>
             <tbody>
               ${this.stockBatches
-                .toReversed()
                 .map(
                   (batch) => `
                 <tr>
