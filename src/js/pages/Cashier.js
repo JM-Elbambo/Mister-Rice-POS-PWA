@@ -3,21 +3,19 @@ import { dataStore } from "../store/index.js";
 import toastManager from "../components/ToastManager.js";
 
 export default function CashierPage() {
-  const page = new Cashier();
-  return page.getElement();
+  return new Cashier().getElement();
 }
 
 class Cashier extends BasePage {
   constructor() {
     super();
-    this.cart = [];
+    this.cart = this.loadCart();
     this.items = [];
     this.init();
   }
 
   async init() {
     try {
-      this.loadCart();
       await this.initCollections([
         {
           collection: dataStore.items,
@@ -35,63 +33,43 @@ class Cashier extends BasePage {
       this.items = dataStore.items.data;
       this.validateCart();
       this.render();
-    } catch (error) {
-      // Handled by initCollections
-    }
+    } catch (error) {}
   }
 
   loadCart() {
     try {
-      const stored = localStorage.getItem("cashier-cart");
-      if (stored) {
-        this.cart = JSON.parse(stored);
-      }
-    } catch (error) {
-      this.cart = [];
+      return JSON.parse(localStorage.getItem("cashier-cart") || "[]");
+    } catch {
+      return [];
     }
   }
 
   saveCart() {
     try {
-      if (this.cart.length === 0) {
-        localStorage.removeItem("cashier-cart");
-      } else {
-        localStorage.setItem("cashier-cart", JSON.stringify(this.cart));
-      }
-    } catch (error) {
-      console.error("Failed to save cart:", error);
-    }
-  }
-
-  clearCart() {
-    try {
-      localStorage.removeItem("cashier-cart");
-    } catch (error) {
-      console.error("Failed to clear cart:", error);
+      this.cart.length
+        ? localStorage.setItem("cashier-cart", JSON.stringify(this.cart))
+        : localStorage.removeItem("cashier-cart");
+    } catch (e) {
+      console.error("Failed to save cart:", e);
     }
   }
 
   validateCart() {
     if (!this.items.length) return;
 
-    let updated = false;
-    this.cart = this.cart.filter((item) => {
+    const valid = this.cart.filter((item) => {
       const product = this.items.find((i) => i.id === item.itemId);
-      if (!product) {
-        updated = true;
-        return false;
-      }
+      if (!product) return false;
 
-      const stock = dataStore.stocks.itemTotals.get(item.itemId) ?? 0;
-      if (item.qty > stock && stock > 0) {
-        item.qty = stock;
-        updated = true;
-      }
-
+      const stock = dataStore.stocks.getItemTotal(item.itemId);
+      if (item.qty > stock && stock > 0) item.qty = stock;
       return true;
     });
 
-    if (updated) this.saveCart();
+    if (valid.length !== this.cart.length) {
+      this.cart = valid;
+      this.saveCart();
+    }
   }
 
   render() {
@@ -168,7 +146,7 @@ class Cashier extends BasePage {
                 </div>
               </div>
 
-              <div class="mb-3" id="changeDisplay" style="display: none;">
+              <div class="mb-3 d-none" id="changeDisplay">
                 <div class="alert alert-success mb-0">
                   <div class="d-flex justify-content-between align-items-center">
                     <span>Change:</span>
@@ -199,51 +177,46 @@ class Cashier extends BasePage {
     const searchInput = this.container.querySelector("#searchInput");
     const searchResults = this.container.querySelector("#searchResults");
     const cartBody = this.container.querySelector("#cartBody");
-    const paymentInput = this.container.querySelector("#paymentInput");
-    const clearBtn = this.container.querySelector("#clearBtn");
-    const checkoutBtn = this.container.querySelector("#checkoutBtn");
 
-    let searchTimeout;
+    // Search with debounce
+    let timeout;
     searchInput.addEventListener("input", (e) => {
-      clearTimeout(searchTimeout);
+      clearTimeout(timeout);
       const val = e.target.value.trim().toLowerCase();
+      if (!val) return (searchResults.innerHTML = "");
 
-      if (!val) {
-        searchResults.innerHTML = "";
-        return;
-      }
-
-      searchTimeout = setTimeout(() => {
+      timeout = setTimeout(() => {
         const matches = this.items
           .filter(
-            (item) =>
-              item.name.toLowerCase().includes(val) ||
-              item.sku?.toLowerCase().includes(val),
+            (i) =>
+              i.name.toLowerCase().includes(val) ||
+              i.sku?.toLowerCase().includes(val),
           )
           .slice(0, 5);
 
         searchResults.innerHTML = matches.length
           ? matches
-              .map((item) => {
-                const stock = dataStore.stocks.itemTotals.get(item.id) ?? 0;
+              .map((i) => {
+                const stock = dataStore.stocks.getItemTotal(i.id);
                 const hasStock = stock > 0;
                 return `
-                  <button type="button" class="list-group-item list-group-item-action ${!hasStock ? "disabled" : ""}" data-add="${item.id}" ${!hasStock ? "disabled" : ""}>
-                    <div class="d-flex justify-content-between">
-                      <div>
-                        <div>${item.name} ${!hasStock ? '<span class="badge bg-danger ms-2">Out of Stock</span>' : ""}</div>
-                        <small class="text-muted">₱${item.price.toFixed(2)} | Stock: ${stock}</small>
-                      </div>
-                      ${hasStock ? '<i class="bi bi-plus-circle"></i>' : '<i class="bi bi-x-circle text-muted"></i>'}
+                <button class="list-group-item list-group-item-action ${hasStock ? "" : "disabled"}" data-add="${i.id}" ${hasStock ? "" : "disabled"}>
+                  <div class="d-flex justify-content-between">
+                    <div>
+                      <div>${i.name} ${hasStock ? "" : '<span class="badge bg-danger ms-2">Out of Stock</span>'}</div>
+                      <small class="text-muted">₱${i.price.toFixed(2)} | Stock: ${stock}</small>
                     </div>
-                  </button>
-                `;
+                    <i class="bi bi-${hasStock ? "plus" : "x"}-circle${hasStock ? "" : " text-muted"}"></i>
+                  </div>
+                </button>
+              `;
               })
               .join("")
           : '<div class="list-group-item text-muted">No matches</div>';
       }, 500);
     });
 
+    // Add to cart
     searchResults.addEventListener("click", (e) => {
       const btn = e.target.closest("[data-add]");
       if (!btn) return;
@@ -251,16 +224,13 @@ class Cashier extends BasePage {
       const item = this.items.find((i) => i.id === btn.dataset.add);
       if (!item) return;
 
-      const stock = dataStore.stocks.itemTotals.get(item.id) ?? 0;
+      const stock = dataStore.stocks.getItemTotal(item.id);
       const existing = this.cart.find((c) => c.itemId === item.id);
 
       if (existing) {
-        if (existing.qty < stock) {
-          existing.qty++;
-        } else {
-          toastManager.showWarning("Insufficient stock");
-          return;
-        }
+        if (existing.qty >= stock)
+          return toastManager.showWarning("Insufficient stock");
+        existing.qty++;
       } else {
         this.cart.push({
           itemId: item.id,
@@ -275,20 +245,20 @@ class Cashier extends BasePage {
       searchInput.value = "";
       searchResults.innerHTML = "";
       searchInput.focus();
-
       this.updateCart();
       this.saveCart();
     });
 
+    // Cart input changes
     cartBody.addEventListener("input", (e) => {
       const row = e.target.closest("tr");
       if (!row) return;
 
       const i = parseInt(row.dataset.index);
       const item = this.cart[i];
-      const stock = dataStore.stocks.itemTotals.get(item.itemId) ?? 0;
 
       if (e.target.dataset.qty !== undefined) {
+        const stock = dataStore.stocks.getItemTotal(item.itemId);
         item.qty = Math.max(1, Math.min(stock, parseInt(e.target.value) || 1));
       } else if (e.target.dataset.disc !== undefined) {
         item.discountValue = Math.max(0, parseFloat(e.target.value) || 0);
@@ -299,19 +269,17 @@ class Cashier extends BasePage {
       this.saveCart();
     });
 
+    // Discount type change
     cartBody.addEventListener("change", (e) => {
-      const row = e.target.closest("tr");
-      if (!row) return;
-
-      const i = parseInt(row.dataset.index);
-      if (e.target.dataset.disctype !== undefined) {
-        this.cart[i].discountType = e.target.value;
-        this.updateSubtotal(i);
-        this.updateSummary();
-        this.saveCart();
-      }
+      if (e.target.dataset.disctype === undefined) return;
+      const i = parseInt(e.target.closest("tr").dataset.index);
+      this.cart[i].discountType = e.target.value;
+      this.updateSubtotal(i);
+      this.updateSummary();
+      this.saveCart();
     });
 
+    // Remove item
     cartBody.addEventListener("click", (e) => {
       const btn = e.target.closest("[data-remove]");
       if (!btn) return;
@@ -320,17 +288,24 @@ class Cashier extends BasePage {
       this.saveCart();
     });
 
-    paymentInput.addEventListener("input", () => this.updatePayment());
+    // Payment input
+    this.container
+      .querySelector("#paymentInput")
+      .addEventListener("input", () => this.updatePayment());
 
-    clearBtn.addEventListener("click", () => {
+    // Clear cart
+    this.container.querySelector("#clearBtn").addEventListener("click", () => {
       this.cart = [];
-      paymentInput.value = "";
+      this.container.querySelector("#paymentInput").value = "";
       this.updateCart();
-      this.clearCart();
+      this.saveCart();
       searchInput.focus();
     });
 
-    checkoutBtn.addEventListener("click", () => this.checkout());
+    // Checkout
+    this.container
+      .querySelector("#checkoutBtn")
+      .addEventListener("click", () => this.checkout());
   }
 
   updateCart() {
@@ -339,48 +314,42 @@ class Cashier extends BasePage {
     cartBody.innerHTML = this.cart.length
       ? this.cart
           .map((item, i) => {
-            const stock = dataStore.stocks.itemTotals.get(item.itemId) ?? 0;
+            const stock = dataStore.stocks.getItemTotal(item.itemId);
             return `
-          <tr data-index="${i}">
-            <td class="align-middle">
-              <div>${item.name}</div>
-            </td>
-            <td>
-              <input type="number" class="form-control" value="${item.qty}" min="1" max="${stock}" data-qty>
-            </td>
-            <td class="align-middle">₱${item.price.toFixed(2)}</td>
-            <td>
-              <div class="input-group input-group-sm">
-                <select class="form-select" style="max-width: 70px;" data-disctype>
-                  <option value="percent" ${item.discountType === "percent" ? "selected" : ""}>%</option>
-                  <option value="fixed" ${item.discountType === "fixed" ? "selected" : ""}>₱</option>
-                </select>
-                <input type="number" class="form-control" value="${item.discountValue}" min="0" step="0.01" data-disc>
-              </div>
-            </td>
-            <td class="text-end align-middle fw-semibold" data-subtotal="${i}">
-              ₱${this.calcItemTotal(item).toFixed(2)}
-            </td>
-            <td>
-              <button type="button" class="btn btn-sm btn-outline-danger" data-remove="${i}">
-                <i class="bi bi-trash"></i>
-              </button>
-            </td>
-          </tr>
-        `;
+            <tr data-index="${i}">
+              <td class="align-middle">${item.name}</td>
+              <td>
+                <input type="number" class="form-control" value="${item.qty}" min="1" max="${stock}" data-qty>
+              </td>
+              <td class="align-middle">₱${item.price.toFixed(2)}</td>
+              <td>
+                <div class="input-group input-group-sm">
+                  <select class="form-select" style="max-width: 70px;" data-disctype>
+                    <option value="percent" ${item.discountType === "percent" ? "selected" : ""}>%</option>
+                    <option value="fixed" ${item.discountType === "fixed" ? "selected" : ""}>₱</option>
+                  </select>
+                  <input type="number" class="form-control" value="${item.discountValue}" min="0" step="0.01" data-disc>
+                </div>
+              </td>
+              <td class="text-end align-middle fw-semibold" data-subtotal="${i}">₱${this.calcItemTotal(item).toFixed(2)}</td>
+              <td>
+                <button class="btn btn-sm btn-outline-danger" data-remove="${i}">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          `;
           })
           .join("")
-      : `<tr><td colspan="6" class="text-center text-muted py-4">No items added yet</td></tr>`;
+      : '<tr><td colspan="6" class="text-center text-muted py-4">No items added yet</td></tr>';
 
     this.updateSummary();
     this.updateButtons();
   }
 
-  updateSubtotal(index) {
-    const el = this.container.querySelector(`[data-subtotal="${index}"]`);
-    if (el) {
-      el.textContent = `₱${this.calcItemTotal(this.cart[index]).toFixed(2)}`;
-    }
+  updateSubtotal(i) {
+    const el = this.container.querySelector(`[data-subtotal="${i}"]`);
+    if (el) el.textContent = `₱${this.calcItemTotal(this.cart[i]).toFixed(2)}`;
   }
 
   calcItemTotal(item) {
@@ -394,9 +363,9 @@ class Cashier extends BasePage {
 
   updateSummary() {
     const items = this.cart.length;
-    const units = this.cart.reduce((sum, i) => sum + i.qty, 0);
-    const subtotal = this.cart.reduce((sum, i) => sum + i.price * i.qty, 0);
-    const total = this.cart.reduce((sum, i) => sum + this.calcItemTotal(i), 0);
+    const units = this.cart.reduce((s, i) => s + i.qty, 0);
+    const subtotal = this.cart.reduce((s, i) => s + i.price * i.qty, 0);
+    const total = this.cart.reduce((s, i) => s + this.calcItemTotal(i), 0);
 
     this.container.querySelector("#summaryItems").textContent = items;
     this.container.querySelector("#summaryUnits").textContent = units;
@@ -411,21 +380,21 @@ class Cashier extends BasePage {
   }
 
   updatePayment() {
-    const total = this.cart.reduce((sum, i) => sum + this.calcItemTotal(i), 0);
+    const total = this.cart.reduce((s, i) => s + this.calcItemTotal(i), 0);
     const payment =
       parseFloat(this.container.querySelector("#paymentInput").value) || 0;
     const change = payment - total;
 
     const changeDisplay = this.container.querySelector("#changeDisplay");
-    const changeEl = this.container.querySelector("#changeAmount");
     const checkoutBtn = this.container.querySelector("#checkoutBtn");
 
     if (payment >= total && this.cart.length > 0) {
-      changeDisplay.style.display = "block";
-      changeEl.textContent = `₱${change.toFixed(2)}`;
+      changeDisplay.classList.remove("d-none");
+      this.container.querySelector("#changeAmount").textContent =
+        `₱${change.toFixed(2)}`;
       checkoutBtn.disabled = false;
     } else {
-      changeDisplay.style.display = "none";
+      changeDisplay.classList.add("d-none");
       checkoutBtn.disabled = true;
     }
   }
@@ -435,15 +404,13 @@ class Cashier extends BasePage {
     this.container.querySelector("#clearBtn").disabled = isEmpty;
     if (isEmpty) {
       this.container.querySelector("#checkoutBtn").disabled = true;
-      this.container.querySelector("#changeDisplay").style.display = "none";
+      this.container.querySelector("#changeDisplay").classList.add("d-none");
     }
   }
 
   updateSearchResults() {
-    const searchInput = this.container.querySelector("#searchInput");
-    if (searchInput && searchInput.value.trim()) {
-      searchInput.dispatchEvent(new Event("input"));
-    }
+    const input = this.container.querySelector("#searchInput");
+    if (input?.value.trim()) input.dispatchEvent(new Event("input"));
   }
 
   async checkout() {
@@ -454,24 +421,18 @@ class Cashier extends BasePage {
     btn.disabled = true;
 
     try {
-      // Check stock availability before processing
+      // Validate stock
       for (const item of this.cart) {
-        const stock = dataStore.stocks.itemTotals.get(item.itemId) ?? 0;
-        if (item.qty > stock) {
+        const stock = dataStore.stocks.getItemTotal(item.itemId);
+        if (item.qty > stock)
           throw new Error(`Insufficient stock for ${item.name}`);
-        }
       }
 
       await Promise.all(
-        this.cart.map((item) =>
-          dataStore.stocks.reduceStock(item.itemId, item.qty),
-        ),
+        this.cart.map((i) => dataStore.stocks.reduceStock(i.itemId, i.qty)),
       );
 
-      const total = this.cart.reduce(
-        (sum, i) => sum + this.calcItemTotal(i),
-        0,
-      );
+      const total = this.cart.reduce((s, i) => s + this.calcItemTotal(i), 0);
       const payment = parseFloat(
         this.container.querySelector("#paymentInput").value,
       );
@@ -485,7 +446,7 @@ class Cashier extends BasePage {
       this.cart = [];
       this.container.querySelector("#paymentInput").value = "";
       this.updateCart();
-      this.clearCart();
+      this.saveCart();
       this.container.querySelector("#searchInput").focus();
     } catch (error) {
       toastManager.showError(`Checkout failed: ${error.message}`);
