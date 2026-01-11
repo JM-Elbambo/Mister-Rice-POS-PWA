@@ -52,8 +52,6 @@ class Inventory extends BasePage {
   update(skipFilters = false) {
     if (!this.initialized) return;
 
-    dataStore.stocks.ensureTotals();
-
     const items = dataStore.items.data.map((item) => ({
       ...item,
       categoryName: dataStore.categories.idNameMap.get(item.category) ?? "None",

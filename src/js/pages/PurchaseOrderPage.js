@@ -21,7 +21,6 @@ class PurchaseOrder extends BasePage {
   async init() {
     try {
       this.loadCart();
-
       await this.initCollections([
         {
           collection: dataStore.items,

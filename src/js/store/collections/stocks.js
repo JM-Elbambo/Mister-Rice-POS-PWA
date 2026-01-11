@@ -64,9 +64,7 @@ class StocksCollection extends BaseCollection {
   }
 
   async addStock(itemId, quantityToAdd) {
-    const batches = this.getAvailableByItem(itemId).sort(
-      (a, b) => b.purchaseDate.toMillis() - a.purchaseDate.toMillis(),
-    );
+    const batches = this.getAvailableByItem(itemId).reverse();
 
     if (batches.length === 0) {
       throw new Error("No existing batches found. Cannot add stock.");
@@ -161,13 +159,6 @@ class StocksCollection extends BaseCollection {
   // Get total stock for a single item (O(1) lookup)
   getItemTotal(itemId) {
     return this.itemTotals.get(itemId) ?? 0;
-  }
-
-  // Ensure stock totals are available
-  ensureTotals() {
-    if (this.data.length > 0 && this.itemTotals.size === 0) {
-      this.processData(this.data);
-    }
   }
 }
 

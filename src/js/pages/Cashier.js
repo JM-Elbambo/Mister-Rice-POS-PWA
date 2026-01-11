@@ -17,9 +17,7 @@ class Cashier extends BasePage {
 
   async init() {
     try {
-      // Load cart first (before collections)
-      await this.loadCart();
-
+      this.loadCart();
       await this.initCollections([
         {
           collection: dataStore.items,
@@ -42,7 +40,7 @@ class Cashier extends BasePage {
     }
   }
 
-  async loadCart() {
+  loadCart() {
     try {
       const stored = localStorage.getItem("cashier-cart");
       if (stored) {
