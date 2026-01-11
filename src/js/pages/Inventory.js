@@ -216,6 +216,7 @@ class Inventory extends BasePage {
     this.tableEl.innerHTML = "";
     const wrapper = document.createElement("div");
     wrapper.className = "table-responsive";
+    wrapper.style.overflow = "visible";
     wrapper.appendChild(
       Table(
         ["Product Name", "Category", "Price", "Stock", "Status"],
