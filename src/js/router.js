@@ -7,8 +7,7 @@ import UnauthorizedPage from "./pages/UnauthorizedPage";
 import DashboardPage from "./pages/Dashboard";
 import CashierPage from "./pages/Cashier";
 import InventoryPage from "./pages/Inventory";
-import PurchaseOrderPage from "./pages/PurchaseOrderPage";
-// import TransactionsPage from "./pages/Transactions";
+import PurchasingPage from "./pages/Purchasing";
 
 // Components
 import Navbar from "./components/Navbar";
@@ -18,9 +17,8 @@ const routes = {
   "/unauthorized": UnauthorizedPage,
   "/dashboard": DashboardPage,
   "/cashier": CashierPage,
-  //   "/transactions": TransactionsPage,
   "/inventory": InventoryPage,
-  "/purchase-order": PurchaseOrderPage,
+  "/purchasing": PurchasingPage,
 };
 
 const routesWithoutAccess = new Set(["/signin", "/unauthorized"]);

@@ -4,7 +4,7 @@ const navLinks = [
   { path: "/dashboard", label: "Dashboard", icon: "grid" },
   { path: "/cashier", label: "Cashier", icon: "cart-check" },
   { path: "/inventory", label: "Inventory", icon: "box-seam" },
-  { path: "/purchase-order", label: "Purchase Order", icon: "clipboard-plus" },
+  { path: "/purchasing", label: "Purchasing", icon: "clipboard-plus" },
   { path: "/transactions", label: "Transactions", icon: "clock-history" },
 ];
 

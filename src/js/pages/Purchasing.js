@@ -3,12 +3,12 @@ import { dataStore } from "../store/index.js";
 import toastManager from "../components/ToastManager.js";
 import { Timestamp } from "firebase/firestore";
 
-export default function PurchaseOrderPage() {
-  const page = new PurchaseOrder();
+export default function PurchasingPage() {
+  const page = new Purchasing();
   return page.getElement();
 }
 
-class PurchaseOrder extends BasePage {
+class Purchasing extends BasePage {
   constructor() {
     super();
     this.cart = [];
