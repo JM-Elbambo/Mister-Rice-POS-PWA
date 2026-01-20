@@ -418,21 +418,34 @@ class PurchaseOrder extends BasePage {
     btn.disabled = true;
 
     try {
-      const poId = `PO-${Date.now()}`;
+      let poId;
       const timestamp = Timestamp.fromDate(new Date(purchaseDate));
 
-      await Promise.all(
-        this.cart.map((item) =>
-          dataStore.stocks.addStockByPo({
-            itemId: item.itemId,
-            poId,
-            qty: item.quantity,
-            unitCost: item.unitCost,
-            purchaseDate: timestamp,
-            supplier,
-          }),
-        ),
-      );
+      try {
+        const poDocRef = await dataStore.purchaseOrders.addPurchaseOrder(
+          timestamp,
+          supplier,
+        );
+        poId = poDocRef.id;
+
+        await Promise.all(
+          this.cart.map((item) =>
+            dataStore.stocks.addStockByPo(
+              item.itemId,
+              poId,
+              item.quantity,
+              item.unitCost,
+              timestamp,
+              supplier,
+            ),
+          ),
+        );
+      } catch (err) {
+        if (poId) {
+          await dataStore.purchaseOrders.delete(poId);
+        }
+        throw err;
+      }
 
       const totalUnits = this.cart.reduce((s, i) => s + i.quantity, 0);
       toastManager.showSuccess(

@@ -3,6 +3,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { categoriesCollection } from "./collections/categories.js";
 import { itemsCollection } from "./collections/items.js";
 import { stocksCollection } from "./collections/stocks.js";
+import { purchaseOrdersCollection } from "./collections/purchaseOrders.js";
 
 class DataStore {
   constructor() {
@@ -10,6 +11,7 @@ class DataStore {
       categories: categoriesCollection,
       items: itemsCollection,
       stocks: stocksCollection,
+      purchaseOrders: purchaseOrdersCollection,
     };
   }
 
@@ -25,13 +27,16 @@ class DataStore {
     return this.collections.stocks;
   }
 
+  get purchaseOrders() {
+    return this.collections.purchaseOrders;
+  }
+
   async init() {
     console.log("Initializing data store...");
   }
 
   async checkAccess() {
     try {
-      // Check access by retrieving a test document
       const testDocRef = doc(db, "_accessCheck/ping");
       await getDoc(testDocRef);
       return true;
@@ -39,7 +44,7 @@ class DataStore {
       if (error.code === "permission-denied") {
         return false;
       }
-      return false; // other errors (e.g., network)
+      return false;
     }
   }
 }

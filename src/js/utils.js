@@ -1,6 +1,6 @@
 import { Timestamp } from "firebase/firestore";
 
-export function timestampToDateString(timestamp) {
+export function formatTimestamp(timestamp) {
   return new Intl.DateTimeFormat("en-CA", {
     year: "numeric",
     month: "2-digit",

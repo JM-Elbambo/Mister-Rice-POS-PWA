@@ -6,34 +6,29 @@ class StocksCollection extends BaseCollection {
   constructor() {
     super("stocks");
 
-    // Only fetch active stock (remainingQty > 0)
     this.query = query(
       collection(db, this.collectionName),
       where("remainingQty", ">", 0),
     );
 
     this.itemTotals = new Map();
-    this.itemBatches = new Map(); // Cache batches by itemId
+    this.itemBatches = new Map();
   }
 
   processData(rawData) {
-    // Sort once during processing
     this.data = rawData.sort(
-      (a, b) => a.purchaseDate.toMillis() - b.purchaseDate.toMillis(),
+      (a, b) => a.purchaseDate?.toMillis() - b.purchaseDate?.toMillis(),
     );
 
-    // Clear and rebuild maps
     this.itemTotals.clear();
     this.itemBatches.clear();
 
     for (const stock of this.data) {
       if (!stock.itemId || stock.remainingQty <= 0) continue;
 
-      // Build totals map
       const current = this.itemTotals.get(stock.itemId) ?? 0;
       this.itemTotals.set(stock.itemId, current + stock.remainingQty);
 
-      // Build batches map for quick lookup
       if (!this.itemBatches.has(stock.itemId)) {
         this.itemBatches.set(stock.itemId, []);
       }
@@ -41,21 +36,17 @@ class StocksCollection extends BaseCollection {
     }
   }
 
-  async addStockByPo({ itemId, poId, qty, unitCost, purchaseDate, supplier }) {
-    const stockData = {
-      itemId,
-      poId,
+  async addStockByPo(itemId, poId, qty, unitCost) {
+    return await this.add({
+      itemId: itemId,
+      poId: poId,
       receivedQty: parseFloat(qty),
       remainingQty: parseFloat(qty),
       unitCost: parseFloat(unitCost),
-      purchaseDate,
-      supplier: supplier || null,
-    };
-
-    return await this.add(stockData);
+    });
   }
 
-  async adjustStock(itemId, quantity, reason) {
+  async adjustStock(itemId, quantity) {
     if (quantity > 0) {
       return await this.addStock(itemId, quantity);
     } else {
@@ -80,11 +71,9 @@ class StocksCollection extends BaseCollection {
       if (capacity <= 0) continue;
 
       const toAdd = Math.min(capacity, remainingToAdd);
-      const newRemaining = batch.remainingQty + toAdd;
-
       updates.push({
         id: batch.id,
-        remainingQty: newRemaining,
+        remainingQty: batch.remainingQty + toAdd,
       });
 
       remainingToAdd -= toAdd;
@@ -96,7 +85,6 @@ class StocksCollection extends BaseCollection {
       );
     }
 
-    // Batch update
     await Promise.all(
       updates.map((u) =>
         updateDoc(doc(db, this.collectionName, u.id), {
@@ -129,17 +117,14 @@ class StocksCollection extends BaseCollection {
       if (remainingToReduce <= 0) break;
 
       const toDeduct = Math.min(stock.remainingQty, remainingToReduce);
-      const newRemaining = stock.remainingQty - toDeduct;
-
       updates.push({
         id: stock.id,
-        remainingQty: newRemaining,
+        remainingQty: stock.remainingQty - toDeduct,
       });
 
       remainingToReduce -= toDeduct;
     }
 
-    // Batch update
     await Promise.all(
       updates.map((u) =>
         updateDoc(doc(db, this.collectionName, u.id), {
@@ -152,11 +137,9 @@ class StocksCollection extends BaseCollection {
   }
 
   getAvailableByItem(itemId) {
-    // Use cached map for O(1) lookup instead of filtering entire array
     return this.itemBatches.get(itemId) || [];
   }
 
-  // Get total stock for a single item (O(1) lookup)
   getItemTotal(itemId) {
     return this.itemTotals.get(itemId) ?? 0;
   }

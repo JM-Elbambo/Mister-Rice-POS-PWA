@@ -1,6 +1,7 @@
 import toastManager from "../../ToastManager.js";
 import BaseModal from "../../BaseModal.js";
-import { formatCurrency, timestampToDateString } from "../../../utils.js";
+import { formatCurrency, formatTimestamp } from "../../../utils.js";
+import { dataStore } from "../../../store/index.js";
 
 export default class ViewItemModal extends BaseModal {
   constructor(item, stockBatches, onEdit, onAdjustStock) {
@@ -10,6 +11,18 @@ export default class ViewItemModal extends BaseModal {
     this.onEdit = onEdit;
     this.onAdjustStock = onAdjustStock;
     this.activeTab = "info";
+    this.purchaseOrders = new Map();
+    this.loadPurchaseOrders();
+  }
+
+  loadPurchaseOrders() {
+    const poIds = [...new Set(this.stockBatches.map((b) => b.poId))];
+    const allPos = dataStore.purchaseOrders.data;
+
+    poIds.forEach((poId) => {
+      const po = allPos.find((p) => p.id === poId);
+      if (po) this.purchaseOrders.set(poId, po);
+    });
   }
 
   getModalContent() {
@@ -56,9 +69,7 @@ export default class ViewItemModal extends BaseModal {
   getInfoTab() {
     return `
       <div data-tab-content="info">
-
         <div class="container-fluid mb-3">
-
           <div class="row mb-2">
             <div class="col-lg-3 col-5 text-muted">SKU</div>
             <div class="col">
@@ -91,7 +102,6 @@ export default class ViewItemModal extends BaseModal {
               ₱${formatCurrency(this.item.price)}
             </div>
           </div>
-
         </div>
         
         <button type="button" class="btn btn-outline-primary w-100" id="editBtn">
@@ -159,28 +169,29 @@ export default class ViewItemModal extends BaseModal {
           <table class="table table-sm table-hover">
             <thead class="table-light">
               <tr>
-                <th>Id</th>
+                <th>PO ID</th>
                 <th>Supplier</th>
-                <th class="text-end">Remaining Qty</th>
-                <th class="text-end">Received Qty</th>
+                <th>Purchase Date</th>
+                <th class="text-end">Received</th>
+                <th class="text-end">Remaining</th>
                 <th class="text-end">Unit Cost</th>
-                <th class="text-end">Purchase Date</th>
               </tr>
             </thead>
             <tbody>
               ${this.stockBatches
-                .map(
-                  (batch) => `
+                .map((batch) => {
+                  const po = this.purchaseOrders.get(batch.poId);
+                  return `
                 <tr>
                   <td><code class="text-muted">${batch.poId}</code></td>
-                  <td><code class="text-muted">${batch.supplier || ""}</code></td>
-                  <td class="text-end">${batch.remainingQty}</td>
+                  <td>${po?.supplier || "—"}</td>
+                  <td>${po?.purchaseDate ? formatTimestamp(po.purchaseDate) : "—"}</td>
                   <td class="text-end">${batch.receivedQty}</td>
+                  <td class="text-end">${batch.remainingQty}</td>
                   <td class="text-end">₱${formatCurrency(batch.unitCost)}</td>
-                  <td class="text-end">${timestampToDateString(batch.purchaseDate)}</td>
                 </tr>
-              `,
-                )
+              `;
+                })
                 .join("")}
             </tbody>
           </table>

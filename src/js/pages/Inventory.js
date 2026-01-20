@@ -41,12 +41,11 @@ class Inventory extends BasePage {
         { collection: dataStore.items, callback: () => this.update() },
         { collection: dataStore.categories, callback: () => this.update() },
         { collection: dataStore.stocks, callback: () => this.update() },
+        { collection: dataStore.purchaseOrders, callback: () => {} },
       ]);
 
       this.update();
-    } catch (error) {
-      // Handled by initCollections
-    }
+    } catch (error) {}
   }
 
   update(skipFilters = false) {
@@ -63,7 +62,6 @@ class Inventory extends BasePage {
   }
 
   render(skipFilters = false) {
-    // Only append containers on first render
     if (!this.container.contains(this.statsEl)) {
       this.container.innerHTML = "";
       this.container.append(
@@ -174,7 +172,7 @@ class Inventory extends BasePage {
         onFilter: (f) => {
           this.filters = f;
           this.page = 1;
-          this.update(true); // Skip filter re-render
+          this.update(true);
         },
         initialValues: this.filters,
       }),
