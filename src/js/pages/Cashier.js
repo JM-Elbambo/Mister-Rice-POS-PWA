@@ -27,7 +27,10 @@ class Cashier extends BasePage {
             }
           },
         },
-        { collection: dataStore.stocks, callback: () => this.validateCart() },
+        {
+          collection: dataStore.stockBatches,
+          callback: () => this.validateCart(),
+        },
       ]);
 
       this.items = dataStore.items.data;
@@ -61,7 +64,7 @@ class Cashier extends BasePage {
       const product = this.items.find((i) => i.id === item.itemId);
       if (!product) return false;
 
-      const stock = dataStore.stocks.getItemTotal(item.itemId);
+      const stock = dataStore.stockBatches.getItemTotal(item.itemId);
       if (item.qty > stock && stock > 0) item.qty = stock;
       return true;
     });
@@ -197,7 +200,7 @@ class Cashier extends BasePage {
         searchResults.innerHTML = matches.length
           ? matches
               .map((i) => {
-                const stock = dataStore.stocks.getItemTotal(i.id);
+                const stock = dataStore.stockBatches.getItemTotal(i.id);
                 const hasStock = stock > 0;
                 return `
                 <button class="list-group-item list-group-item-action ${hasStock ? "" : "disabled"}" data-add="${i.id}" ${hasStock ? "" : "disabled"}>
@@ -224,7 +227,7 @@ class Cashier extends BasePage {
       const item = this.items.find((i) => i.id === btn.dataset.add);
       if (!item) return;
 
-      const stock = dataStore.stocks.getItemTotal(item.id);
+      const stock = dataStore.stockBatches.getItemTotal(item.id);
       const existing = this.cart.find((c) => c.itemId === item.id);
 
       if (existing) {
@@ -258,7 +261,7 @@ class Cashier extends BasePage {
       const item = this.cart[i];
 
       if (e.target.dataset.qty !== undefined) {
-        const stock = dataStore.stocks.getItemTotal(item.itemId);
+        const stock = dataStore.stockBatches.getItemTotal(item.itemId);
         item.qty = Math.max(1, Math.min(stock, parseInt(e.target.value) || 1));
       } else if (e.target.dataset.disc !== undefined) {
         item.discountValue = Math.max(0, parseFloat(e.target.value) || 0);
@@ -314,7 +317,7 @@ class Cashier extends BasePage {
     cartBody.innerHTML = this.cart.length
       ? this.cart
           .map((item, i) => {
-            const stock = dataStore.stocks.getItemTotal(item.itemId);
+            const stock = dataStore.stockBatches.getItemTotal(item.itemId);
             return `
             <tr data-index="${i}">
               <td class="align-middle">${item.name}</td>
@@ -423,13 +426,15 @@ class Cashier extends BasePage {
     try {
       // Validate stock
       for (const item of this.cart) {
-        const stock = dataStore.stocks.getItemTotal(item.itemId);
+        const stock = dataStore.stockBatches.getItemTotal(item.itemId);
         if (item.qty > stock)
           throw new Error(`Insufficient stock for ${item.name}`);
       }
 
       await Promise.all(
-        this.cart.map((i) => dataStore.stocks.reduceStock(i.itemId, i.qty)),
+        this.cart.map((i) =>
+          dataStore.stockBatches.reduceStock(i.itemId, i.qty),
+        ),
       );
 
       const total = this.cart.reduce((s, i) => s + this.calcItemTotal(i), 0);

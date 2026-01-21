@@ -42,7 +42,7 @@ export default class ViewItemModal extends BaseModal {
           </li>
           <li class="nav-item">
             <button class="nav-link" data-tab="stock">
-              <i class="bi bi-boxes me-1"></i>Stock
+              <i class="bi bi-boxes me-1"></i>Stock Batches
             </button>
           </li>
           <li class="nav-item">

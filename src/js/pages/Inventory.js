@@ -40,7 +40,7 @@ class Inventory extends BasePage {
       await this.initCollections([
         { collection: dataStore.items, callback: () => this.update() },
         { collection: dataStore.categories, callback: () => this.update() },
-        { collection: dataStore.stocks, callback: () => this.update() },
+        { collection: dataStore.stockBatches, callback: () => this.update() },
         { collection: dataStore.purchaseOrders, callback: () => {} },
       ]);
 
@@ -54,7 +54,7 @@ class Inventory extends BasePage {
     const items = dataStore.items.data.map((item) => ({
       ...item,
       categoryName: dataStore.categories.idNameMap.get(item.category) ?? "None",
-      totalStock: dataStore.stocks.getItemTotal(item.id),
+      totalStock: dataStore.stockBatches.getItemTotal(item.id),
     }));
 
     this.filteredData = this.applyFilters(items, this.filters);
@@ -325,7 +325,7 @@ class Inventory extends BasePage {
   showViewModal(item) {
     ViewItemModal.show(
       item,
-      dataStore.stocks.getAvailableByItem(item.id),
+      dataStore.stockBatches.getAvailableByItem(item.id),
       (i) => this.showEditModal(i),
       (i) => this.showAdjustModal(i),
     );
@@ -346,9 +346,10 @@ class Inventory extends BasePage {
   showAdjustModal(item) {
     AdjustStockModal.show(
       item,
-      dataStore.stocks.getAvailableByItem(item.id),
+      dataStore.stockBatches.getAvailableByItem(item.id),
       this.handleAction(
-        (i, qty, reason) => dataStore.stocks.adjustStock(i.id, qty, reason),
+        (i, qty, reason) =>
+          dataStore.stockBatches.adjustStock(i.id, qty, reason),
         (_, qty) =>
           `Adjusted ${item.name} by ${qty > 0 ? "+" : ""}${qty} unit(s)`,
         "Failed to adjust stock",

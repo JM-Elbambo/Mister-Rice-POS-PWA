@@ -2,9 +2,9 @@ import { BaseCollection } from "./baseCollection.js";
 import { collection, query, where, updateDoc, doc } from "firebase/firestore";
 import { db } from "../../firebase.js";
 
-class StocksCollection extends BaseCollection {
+class StockBatches extends BaseCollection {
   constructor() {
-    super("stocks");
+    super("stockBatches");
 
     this.query = query(
       collection(db, this.collectionName),
@@ -145,4 +145,4 @@ class StocksCollection extends BaseCollection {
   }
 }
 
-export const stocksCollection = new StocksCollection();
+export const stockBatchesCollection = new StockBatches();

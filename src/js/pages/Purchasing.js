@@ -33,7 +33,7 @@ class Purchasing extends BasePage {
           },
         },
         { collection: dataStore.categories, callback: () => {} },
-        { collection: dataStore.stocks, callback: () => {} },
+        { collection: dataStore.stockBatches, callback: () => {} },
       ]);
 
       this.items = dataStore.items.data;
@@ -241,7 +241,7 @@ class Purchasing extends BasePage {
                 <div class="d-flex justify-content-between">
                   <div>
                     <div>${item.name}</div>
-                    <small class="text-muted">SKU: ${item.sku || "N/A"} | Stock: ${dataStore.stocks.itemTotals.get(item.id) ?? 0}</small>
+                    <small class="text-muted">SKU: ${item.sku || "N/A"} | Stock: ${dataStore.stockBatches.itemTotals.get(item.id) ?? 0}</small>
                   </div>
                   <i class="bi bi-plus-circle"></i>
                 </div>
@@ -430,7 +430,7 @@ class Purchasing extends BasePage {
 
         await Promise.all(
           this.cart.map((item) =>
-            dataStore.stocks.addStockByPo(
+            dataStore.stockBatches.addStockByPo(
               item.itemId,
               poId,
               item.quantity,
