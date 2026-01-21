@@ -46,14 +46,6 @@ class StockBatches extends BaseCollection {
     });
   }
 
-  async adjustStock(itemId, quantity) {
-    if (quantity > 0) {
-      return await this.addStock(itemId, quantity);
-    } else {
-      return await this.reduceStock(itemId, Math.abs(quantity));
-    }
-  }
-
   async addStock(itemId, quantityToAdd) {
     const batches = this.getAvailableByItem(itemId).reverse();
 

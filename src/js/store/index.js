@@ -3,6 +3,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { categoriesCollection } from "./collections/categories.js";
 import { itemsCollection } from "./collections/items.js";
 import { stockBatchesCollection } from "./collections/stockBatches.js";
+import { stockAdjustmentsCollection } from "./collections/stockAdjustments.js";
 import { purchaseOrdersCollection } from "./collections/purchaseOrders.js";
 
 class DataStore {
@@ -11,6 +12,7 @@ class DataStore {
       categories: categoriesCollection,
       items: itemsCollection,
       stockBatches: stockBatchesCollection,
+      stockAdjustments: stockAdjustmentsCollection,
       purchaseOrders: purchaseOrdersCollection,
     };
   }
@@ -25,6 +27,10 @@ class DataStore {
 
   get stockBatches() {
     return this.collections.stockBatches;
+  }
+
+  get stockAdjustments() {
+    return this.collections.stockAdjustments;
   }
 
   get purchaseOrders() {
