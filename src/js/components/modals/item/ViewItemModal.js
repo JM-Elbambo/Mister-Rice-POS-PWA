@@ -1,4 +1,3 @@
-import toastManager from "../../ToastManager.js";
 import BaseModal from "../../BaseModal.js";
 import { formatCurrency, formatTimestamp } from "../../../utils.js";
 import { dataStore } from "../../../store/index.js";
@@ -11,18 +10,23 @@ export default class ViewItemModal extends BaseModal {
     this.onEdit = onEdit;
     this.onAdjustStock = onAdjustStock;
     this.activeTab = "info";
-    this.purchaseOrders = new Map();
-    this.loadPurchaseOrders();
+    this.purchaseOrders = this.buildPOMap();
+    this.stockAdjustments =
+      dataStore.stockAdjustments?.getByItem?.(item.id) || [];
+    this.avgCost = this.calculateAvgCost();
+    this.stockCost = this.item.totalStock * this.avgCost;
+    this.status = this.getStatus();
   }
 
-  loadPurchaseOrders() {
-    const poIds = [...new Set(this.stockBatches.map((b) => b.poId))];
-    const allPos = dataStore.purchaseOrders.data;
+  buildPOMap() {
+    const poIds = new Set(this.stockBatches.map((b) => b.poId));
+    const poMap = new Map();
 
-    poIds.forEach((poId) => {
-      const po = allPos.find((p) => p.id === poId);
-      if (po) this.purchaseOrders.set(poId, po);
-    });
+    for (const po of dataStore.purchaseOrders.data) {
+      if (poIds.has(po.id)) poMap.set(po.id, po);
+    }
+
+    return poMap;
   }
 
   getModalContent() {
@@ -37,17 +41,22 @@ export default class ViewItemModal extends BaseModal {
         <ul class="nav nav-tabs mb-3" role="tablist">
           <li class="nav-item">
             <button class="nav-link active" data-tab="info">
-              <i class="bi bi-info-circle me-1"></i>Product Info
+              <i class="bi bi-info-circle me-1"></i>Info
             </button>
           </li>
           <li class="nav-item">
             <button class="nav-link" data-tab="stock">
-              <i class="bi bi-boxes me-1"></i>Stock Batches
+              <i class="bi bi-boxes me-1"></i>Stock
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-tab="adjustments">
+              <i class="bi bi-arrow-left-right me-1"></i>Adjustments
             </button>
           </li>
           <li class="nav-item">
             <button class="nav-link" data-tab="po">
-              <i class="bi bi-list-ul me-1"></i>Purchase Orders
+              <i class="bi bi-receipt me-1"></i>Purchase Orders
             </button>
           </li>
         </ul>
@@ -55,6 +64,7 @@ export default class ViewItemModal extends BaseModal {
         <div class="tab-content">
           ${this.getInfoTab()}
           ${this.getStockTab()}
+          ${this.getAdjustmentsTab()}
           ${this.getPurchaseOrdersTab()}
         </div>
       </div>
@@ -112,10 +122,6 @@ export default class ViewItemModal extends BaseModal {
   }
 
   getStockTab() {
-    const avgCost = this.calculateAvgCost();
-    const stockCost = this.item.totalStock * avgCost;
-    const status = this.getStatus();
-
     return `
       <div class="d-none" data-tab-content="stock">
         <div class="row g-3 mb-3 justify-content-center">
@@ -129,8 +135,8 @@ export default class ViewItemModal extends BaseModal {
           <div class="col-lg-4 col-6">
             <div class="text-center p-3 bg-body-secondary rounded h-100 d-flex flex-column justify-content-center">
               <div class="text-muted small mb-1">Status</div>
-              <span class="badge bg-${status.color} fs-6">
-                <i class="bi ${status.icon} me-1"></i>${status.label}
+              <span class="badge bg-${this.status.color} fs-6">
+                <i class="bi ${this.status.icon} me-1"></i>${this.status.label}
               </span>
             </div>
           </div>
@@ -146,12 +152,12 @@ export default class ViewItemModal extends BaseModal {
 
           <div class="row mb-2">
             <div class="col-lg-3 col-5 text-muted">Avg. Unit Cost</div>
-            <div class="col fw-semibold">₱${formatCurrency(avgCost)}</div>
+            <div class="col fw-semibold">₱${formatCurrency(this.avgCost)}</div>
           </div>
 
           <div class="row mb-2">
             <div class="col-lg-3 col-5 text-muted">Total Stock Cost</div>
-            <div class="col fw-semibold">₱${formatCurrency(stockCost)}</div>
+            <div class="col fw-semibold">₱${formatCurrency(this.stockCost)}</div>
           </div>
         </div>
 
@@ -202,6 +208,60 @@ export default class ViewItemModal extends BaseModal {
     return `
       <div class="d-none" data-tab-content="po">
         ${ordersHtml}
+      </div>
+    `;
+  }
+
+  getAdjustmentsTab() {
+    const adjustmentsHtml = this.stockAdjustments.length
+      ? `
+        <div class="table-responsive">
+          <table class="table table-sm table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>Date & Time</th>
+                <th>Reason</th>
+                <th class="text-end">Quantity</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${this.stockAdjustments
+                .map((adj) => {
+                  const isPositive = adj.qty > 0;
+                  const dateTime = adj.createdAt
+                    ? new Date(adj.createdAt.toDate())
+                        .toLocaleString("sv-SE", {
+                          year: "numeric",
+                          month: "2-digit",
+                          day: "2-digit",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: false,
+                        })
+                        .replace(" ", " ")
+                    : "—";
+                  return `
+                <tr>
+                  <td>${dateTime}</td>
+                  <td><span class="text-capitalize">${adj.reason}</span></td>
+                  <td class="text-end">
+                    <span class="badge bg-${isPositive ? "success" : "danger"}">
+                      ${isPositive ? "+" : ""}${adj.qty}
+                    </span>
+                  </td>
+                </tr>
+              `;
+                })
+                .join("")}
+            </tbody>
+          </table>
+        </div>
+      `
+      : '<p class="text-muted text-center py-4">No stock adjustments yet</p>';
+
+    return `
+      <div class="d-none" data-tab-content="adjustments">
+        ${adjustmentsHtml}
       </div>
     `;
   }

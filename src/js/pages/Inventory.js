@@ -42,6 +42,7 @@ class Inventory extends BasePage {
         { collection: dataStore.categories, callback: () => this.update() },
         { collection: dataStore.stockBatches, callback: () => this.update() },
         { collection: dataStore.purchaseOrders, callback: () => {} },
+        { collection: dataStore.stockAdjustments, callback: () => {} },
       ]);
 
       this.update();
