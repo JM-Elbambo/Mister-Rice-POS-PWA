@@ -5,6 +5,7 @@ import Table from "../components/Table.js";
 import Pagination from "../components/Pagination.js";
 import TableFilter from "../components/TableFilter.js";
 import TransactionDetailModal from "../components/modals/TransactionDetail.js";
+import { formatDateTime } from "../utils.js";
 
 export default function TransactionsPage() {
   return new Transactions().getElement();
@@ -134,16 +135,20 @@ class Transactions extends BasePage {
     const start = (this.page - 1) * this.perPage;
     const pageData = this.filteredData.slice(start, start + this.perPage);
 
-    const rows = pageData.map((tx) => [
-      new Date(tx.createdAt).toLocaleString("en-PH", {
-        dateStyle: "short",
-        timeStyle: "short",
-      }),
-      tx.itemCount ?? tx.items?.length ?? 0,
-      tx.unitCount ?? 0,
-      `₱${(tx.total || 0).toFixed(2)}`,
-      tx.discount > 0 ? `-₱${(tx.discount || 0).toFixed(2)}` : "—",
-    ]);
+    const rows = pageData.map((tx) => {
+      const extra = (tx.itemCount ?? tx.items?.length ?? 1) - 1;
+      return [
+        formatDateTime(tx.createdAt),
+        { name: tx.items?.[0]?.name ?? "—", extra },
+        `₱${(tx.total || 0).toFixed(2)}`,
+        tx.discount > 0 ? `-₱${(tx.discount || 0).toFixed(2)}` : "—",
+      ];
+    });
+
+    const formatters = {
+      1: ({ name, extra }) =>
+        `${name}${extra > 0 ? ` <span class="badge bg-secondary ms-2">+${extra} more</span>` : ""}`,
+    };
 
     const actions = [
       {
@@ -154,12 +159,13 @@ class Transactions extends BasePage {
 
     this.tableEl.innerHTML = "";
     const wrapper = document.createElement("div");
-    wrapper.className = "table-responsive";
+    wrapper.className = "table-responsive overflow-visible";
     wrapper.appendChild(
       Table(
-        ["Date & Time", "Items", "Units", "Total", "Discount"],
+        ["Date & Time", "Items", "Total", "Discount"],
         rows,
         actions,
+        formatters,
       ),
     );
     this.tableEl.appendChild(wrapper);

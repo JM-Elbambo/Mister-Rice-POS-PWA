@@ -1,4 +1,5 @@
 import BaseModal from "../BaseModal.js";
+import { formatDateTime } from "../../utils.js";
 
 export default class TransactionDetailModal extends BaseModal {
   constructor(tx) {
@@ -8,10 +9,7 @@ export default class TransactionDetailModal extends BaseModal {
 
   getModalContent() {
     const tx = this.tx;
-    const date = new Date(tx.createdAt).toLocaleString("en-PH", {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
+    const date = formatDateTime(tx.createdAt);
 
     const rowsHtml = (tx.items || [])
       .map((item) => {
