@@ -5,6 +5,7 @@ import { itemsCollection } from "./collections/items.js";
 import { stockBatchesCollection } from "./collections/stockBatches.js";
 import { stockAdjustmentsCollection } from "./collections/stockAdjustments.js";
 import { purchaseOrdersCollection } from "./collections/purchaseOrders.js";
+import { transactionsCollection } from "./collections/transactions.js";
 
 class DataStore {
   constructor() {
@@ -14,6 +15,7 @@ class DataStore {
       stockBatches: stockBatchesCollection,
       stockAdjustments: stockAdjustmentsCollection,
       purchaseOrders: purchaseOrdersCollection,
+      transactions: transactionsCollection,
     };
   }
 
@@ -36,6 +38,8 @@ class DataStore {
   get purchaseOrders() {
     return this.collections.purchaseOrders;
   }
+
+  get transactions() { return this.collections.transactions; }
 
   async init() {
     console.log("Initializing data store...");

@@ -437,11 +437,27 @@ class Cashier extends BasePage {
         ),
       );
 
-      const total = this.cart.reduce((s, i) => s + this.calcItemTotal(i), 0);
+      const { subtotal, total } = this.cart.reduce(
+        (s, i) => ({
+          subtotal: s.subtotal + i.price * i.qty,
+          total: s.total + this.calcItemTotal(i),
+        }),
+        { subtotal: 0, total: 0 },
+      );
       const payment = parseFloat(
         this.container.querySelector("#paymentInput").value,
       );
       const change = payment - total;
+
+      await dataStore.transactions.record({
+        cart: this.cart,
+        calcItemTotal: this.calcItemTotal.bind(this),
+        subtotal,
+        discount: subtotal - total,
+        total,
+        payment,
+        change,
+      });
 
       toastManager.showSuccess(
         `Sale completed! Total: ₱${total.toFixed(2)} | Change: ₱${change.toFixed(2)}`,

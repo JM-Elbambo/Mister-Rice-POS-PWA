@@ -8,6 +8,7 @@ import DashboardPage from "./pages/Dashboard";
 import CashierPage from "./pages/Cashier";
 import InventoryPage from "./pages/Inventory";
 import PurchasingPage from "./pages/Purchasing";
+import TransactionsPage from "./pages/Transactions";
 
 // Components
 import Navbar from "./components/Navbar";
@@ -19,6 +20,7 @@ const routes = {
   "/cashier": CashierPage,
   "/inventory": InventoryPage,
   "/purchasing": PurchasingPage,
+  "/transactions": TransactionsPage
 };
 
 const routesWithoutAccess = new Set(["/signin", "/unauthorized"]);
