@@ -1,5 +1,5 @@
 import BaseModal from "../../BaseModal.js";
-import { formatCurrency, formatTimestamp } from "../../../utils.js";
+import { formatCurrency, formatDateTime, formatDate } from "../../../utils.js";
 import { dataStore } from "../../../store/index.js";
 
 export default class ViewItemModal extends BaseModal {
@@ -191,7 +191,7 @@ export default class ViewItemModal extends BaseModal {
                 <tr>
                   <td><code class="text-muted">${batch.poId}</code></td>
                   <td>${po?.supplier || "—"}</td>
-                  <td>${po?.purchaseDate ? formatTimestamp(po.purchaseDate) : "—"}</td>
+                  <td>${po?.purchaseDate ? formatDate(po.purchaseDate) : "—"}</td>
                   <td class="text-end">${batch.receivedQty}</td>
                   <td class="text-end">${batch.remainingQty}</td>
                   <td class="text-end">₱${formatCurrency(batch.unitCost)}</td>
