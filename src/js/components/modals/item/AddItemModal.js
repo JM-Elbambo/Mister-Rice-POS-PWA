@@ -55,7 +55,7 @@ export default class AddItemModal extends BaseModal {
           <div class="mb-3">
             <label for="productPrice" class="form-label">Price <span class="text-danger">*</span></label>
             <div class="input-group">
-              <span class="input-group-text">$</span>
+              <span class="input-group-text">₱</span>
               <input 
                 type="number" 
                 class="form-control" 
@@ -89,7 +89,7 @@ export default class AddItemModal extends BaseModal {
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
         <button type="submit" form="addProductForm" class="btn btn-primary" id="saveBtn">
-          Add Product
+          Save
         </button>
       </div>
     `;
@@ -135,18 +135,14 @@ export default class AddItemModal extends BaseModal {
         lastUpdated: new Date().toISOString(),
       };
 
-      this.setLoading(saveBtn, true, "Adding...", saveBtn.innerHTML);
+      const saveBtnText = saveBtn.innerHTML;
+      this.setLoading(saveBtn, true, "Saving...", saveBtnText);
 
       try {
         await this.onSave(newItem);
         this.hide();
       } catch (error) {
-        this.setLoading(
-          saveBtn,
-          false,
-          "",
-          '<i class="bi bi-plus-lg me-2"></i>Add Product',
-        );
+        this.setLoading(saveBtn, false, "", saveBtnText);
       }
     });
 
