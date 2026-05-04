@@ -60,7 +60,7 @@ export default class AddItemModal extends BaseModal {
                 type="number" 
                 class="form-control" 
                 id="productPrice" 
-                value="0" 
+                value="" 
                 step="0.1" 
                 min="0" 
                 required
