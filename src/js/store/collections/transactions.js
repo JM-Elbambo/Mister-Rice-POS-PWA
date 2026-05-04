@@ -16,7 +16,7 @@ class TransactionsCollection extends BaseCollection {
       collection(db, this.collectionName),
       where("createdAt", ">=", since.toISOString()),
       orderBy("createdAt", "desc"),
-      limit(500),
+      limit(1000),
     );
   }
 
